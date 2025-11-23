@@ -1,6 +1,28 @@
 local Player = require("player")  -- ça charge player/init.lua automatiquement
 local Enemy = require("enemy")    -- si tu veux garder une classe Enemy séparée
 
+debugLog = ""
+local MAX_DEBUG_LINES = 10
+
+function addDebugLog(line)
+    -- Découpe en lignes
+    local lines = {}
+    for l in debugLog:gmatch("[^\n]+") do
+        table.insert(lines, l)
+    end
+
+    -- Ajoute la nouvelle ligne
+    table.insert(lines, line)
+
+    -- Supprime les premières si on dépasse le max
+    while #lines > MAX_DEBUG_LINES do
+        table.remove(lines, 1)
+    end
+
+    -- Reconstruit le debugLog final
+    debugLog = table.concat(lines, "\n")
+end
+
 function love.load()
     -- Charger background
     background = love.graphics.newImage("images/background.png")
@@ -36,6 +58,8 @@ function love.draw()
     -- Dessiner le joueur et l’ennemi
     player:draw()
     enemy:draw()
+    love.graphics.setColor(1,1,1,1)
+    love.graphics.print(debugLog, 10, 10)
 end
 
 function love.keypressed(key)

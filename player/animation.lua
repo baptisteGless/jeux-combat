@@ -12,7 +12,191 @@ function Animation.new(player)
     self.isJumping = false
     self.walkType = "forward" -- "forward" ou "backward"
     self.jumpPhase = "none"   -- "start", "air", "land"
+    self.isPunching = false
+    self.isLowSlashing = false
+    self.isLowKicking = false
+    self.iskneeing = false
+    self.iskicking = false
+    self.ishit1ing = false
+    self.isHeavySlashing = false
+    self.isBigSlashing = false
     return self
+end
+
+function Animation:startBigSlash()
+    self.isBigSlashing = true
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endBigSlash()
+    self.isBigSlashing = false
+    self.currentFrame = 1
+end
+
+function Animation:startHeavySlash()
+    self.isBigSlashing = false
+    self.isHeavySlashing = true
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endHeavySlash()
+    self.isHeavySlashing = false
+    self.currentFrame = 1
+end
+
+function Animation:starthit1()
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = true
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endhit1()
+    self.ishit1ing = false
+    self.currentFrame = 1
+end
+
+function Animation:startkick()
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = true
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endkick()
+    self.iskicking = false
+    self.currentFrame = 1
+end
+
+function Animation:startknee()
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = true
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endknee()
+    self.iskneeing = false
+    self.currentFrame = 1
+end
+
+function Animation:startLowKick()
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = true
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endLowKick()
+    self.isLowKicking = false
+    self.currentFrame = 1
+end
+
+function Animation:startLowSlash()
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = true
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endLowSlash()
+    self.isLowSlashing = false
+    self.currentFrame = 1
+end
+
+function Animation:startPunch()
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = true
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endPunch()
+    self.isPunching = false
+    self.currentFrame = 1
 end
 
 function Animation:startWalk(moveDir)
@@ -76,6 +260,126 @@ end
 
 function Animation:update(dt)
     local p = self.player
+
+    -- === Gestion big-slash ===
+    if self.isBigSlashing then
+        self.frameTimer = self.frameTimer + dt
+
+        local bigSlashFrames = self.player.sprites.bigSlashFrames[self.player.side]
+        local frameTime = (self.player.bigSlashDuration / #bigSlashFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #bigSlashFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion heavy-slash ===
+    if self.isHeavySlashing then
+        self.frameTimer = self.frameTimer + dt
+
+        local heavySlashFrames = self.player.sprites.heavySlashFrames[self.player.side]
+        local frameTime = (self.player.heavySlashDuration / #heavySlashFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #heavySlashFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion hit1 ===
+    if self.ishit1ing then
+        self.frameTimer = self.frameTimer + dt
+
+        local hit1Frames = self.player.sprites.hit1Frames[self.player.side]
+        local frameTime = (self.player.hit1Duration / #hit1Frames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #hit1Frames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion kick ===
+    if self.iskicking then
+        self.frameTimer = self.frameTimer + dt
+
+        local kickFrames = self.player.sprites.kickFrames[self.player.side]
+        local frameTime = (self.player.kickDuration / #kickFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #kickFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion knee ===
+    if self.iskneeing then
+        self.frameTimer = self.frameTimer + dt
+
+        local kneeFrames = self.player.sprites.kneeFrames[self.player.side]
+        local frameTime = (self.player.kneeDuration / #kneeFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #kneeFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion low-kick ===
+    if self.isLowKicking then
+        self.frameTimer = self.frameTimer + dt
+
+        local lowKickFrames = self.player.sprites.lowKickFrames[self.player.side]
+        local frameTime = (self.player.lowKickDuration / #lowKickFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #lowKickFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion low-slash ===
+    if self.isLowSlashing then
+        self.frameTimer = self.frameTimer + dt
+
+        local lowSlashFrames = self.player.sprites.lowSlashFrames[self.player.side]
+        local frameTime = (self.player.lowSlashDuration / #lowSlashFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #lowSlashFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion punch ===
+    if self.isPunching then
+        self.frameTimer = self.frameTimer + dt
+
+        local punchFrames = self.player.sprites.punchFrames[self.player.side]
+        local frameTime = (self.player.punchDuration / #punchFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #punchFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
 
     -- === Gestion saut ===
     if self.isJumping then

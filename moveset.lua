@@ -63,16 +63,24 @@ end
 
 -- Saut (appelé depuis player:keypressed)
 function Moveset.jump(player)
-    if player.isOnGround and not player.isRolling then
-        player.yVelocity = -player.jumpStrength
-        player.isOnGround = false
-        player.animation:stopWalk() -- on arrête la marche en sautant
-        player.animation:startJump()
-    end
+    -- if player.isOnGround and not player.isRolling then
+    player.yVelocity = -player.jumpStrength
+    player.isOnGround = false
+    player.animation:stopWalk() -- on arrête la marche en sautant
+    player.animation:startJump()
+    -- end
 end
 
 -- Gravité et sol
 function Moveset.applyGravity(player, dt)
+    addDebugLog("applyGravity y=" ..
+        tostring(player.y) ..
+        " vel=" .. tostring(player.yVelocity) ..
+        " ground=" .. tostring(player.isOnGround) ..
+        "floorY = " .. tostring(player.groundY)
+    )
+
+
     player.y = player.y + player.yVelocity * dt
     if not player.isOnGround then
         player.yVelocity = player.yVelocity + player.gravity * dt

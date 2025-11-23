@@ -79,6 +79,46 @@ function Player.new(x, y)
 
     self.side = "G" -- orientation par défaut (G = gauche, D = droite)
 
+    -- état du punch
+    self.isPunching = false
+    self.punchTimer = 0
+    self.punchDuration = 0.35 -- durée totale du punch (à ajuster)
+
+    -- état de low-slash
+    self.isLowSlashing = false
+    self.lowSlashTimer = 0
+    self.lowSlashDuration = 0.35 -- durée totale du low-slash (à ajuster)
+
+    -- état de low-kick
+    self.isLowKicking = false
+    self.lowKickTimer = 0
+    self.lowKickDuration = 0.35 -- durée totale du low-kick (à ajuster)
+
+    -- état de knee
+    self.iskneeing = false
+    self.kneeTimer = 0
+    self.kneeDuration = 0.35 -- durée totale du knee (à ajuster)
+
+    -- état de kick
+    self.iskicking = false
+    self.kickTimer = 0
+    self.kickDuration = 0.5 -- durée totale du kick (à ajuster)
+
+    -- état de hit1
+    self.ishit1ing = false
+    self.hit1Timer = 0
+    self.hit1Duration = 0.35 -- durée totale du hit1 (à ajuster)
+
+    -- état de heavy-slash
+    self.isHeavySlashing = false
+    self.heavySlashTimer = 0
+    self.heavySlashDuration = 0.4 -- durée totale du heavy-slash (à ajuster)
+
+    -- état de big-slash
+    self.isBigSlashing = false
+    self.bigSlashTimer = 0
+    self.bigSlashDuration = 0.7 -- durée totale du big-slash (à ajuster)
+
     -- Sous-modules
     self.movement = Movement.new(self)
     self.animation = Animation.new(self)
@@ -135,6 +175,15 @@ function Player:standUp()
     end
 end
 
+-- Retourne scaleX et scaleY pour que l'image ait la hauteur 'targetHeight'
+local function getImageScaleForHeight(image, targetHeight)
+    local imgWidth = image:getWidth()
+    local imgHeight = image:getHeight()
+    local scaleY = targetHeight / imgHeight
+    local scaleX = scaleY -- garde les proportions
+    return scaleX, scaleY
+end
+
 function Player:loadWalkSprites()
     self.walkForwardFrames = { G = {}, D = {} }
     self.walkBackwardFrames = { G = {}, D = {} }
@@ -142,15 +191,22 @@ function Player:loadWalkSprites()
     local forwardOrder = {1,2,3,4,5,6,7,8,9,10,11,12,13}
     local backwardOrder = {5,4,3,2,1,12,13,11,10,9,8,7,6}
 
+    local targetHeight = self.height -- hauteur à respecter pour toutes les images
+
     for _, side in ipairs({"G","D"}) do
         for i, idx in ipairs(forwardOrder) do
-            self.walkForwardFrames[side][i] = love.graphics.newImage("images/perso_images/pas/pas" .. idx .. "-" .. side .. ".png")
+            local img = love.graphics.newImage("images/perso_images/pas/pas" .. idx .. "-" .. side .. ".png")
+            local scaleX, scaleY = getImageScaleForHeight(img, targetHeight)
+            self.walkForwardFrames[side][i] = {img = img, scaleX = scaleX, scaleY = scaleY}
         end
         for i, idx in ipairs(backwardOrder) do
-            self.walkBackwardFrames[side][i] = love.graphics.newImage("images/perso_images/pas/pas" .. idx .. "-" .. side .. ".png")
+            local img = love.graphics.newImage("images/perso_images/pas/pas" .. idx .. "-" .. side .. ".png")
+            local scaleX, scaleY = getImageScaleForHeight(img, targetHeight)
+            self.walkBackwardFrames[side][i] = {img = img, scaleX = scaleX, scaleY = scaleY}
         end
     end
 end
+
 
 function Player:loadJumpSprites()
     self.jumpFrames = { G = {}, D = {} }
