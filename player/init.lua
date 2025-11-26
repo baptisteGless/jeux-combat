@@ -79,6 +79,43 @@ function Player.new(x, y)
 
     self.side = "G" -- orientation par défaut (G = gauche, D = droite)
 
+    -- Table de combos
+    self.comboDefinitions = {
+        {sequence = {"h","g","g","g","y"}, moves = {"lowKick","punch","lowSlash","punch","bigSlash"}},
+        {sequence = {"h","g","g","g"}, moves = {"lowKick","punch","lowSlash","punch"}},
+        {sequence = {"h","g","g"}, moves = {"lowKick","punch","lowSlash"}},
+        {sequence = {"h","h","g","g","g","y"}, moves = {"lowKick","knee","punch","lowSlash","punch","bigSlash"}},
+        {sequence = {"h","h","g","g","g"}, moves = {"lowKick","knee","punch","lowSlash","punch"}},
+        {sequence = {"h","h","g","g"}, moves = {"lowKick","knee","punch","lowSlash"}},
+        {sequence = {"g","h","h"}, moves = {"punch","lowKick","knee"}},
+        {sequence = {"g","h","h","y"}, moves = {"punch","lowKick","knee","heavySlash"}},
+        {sequence = {"g","g","h","h"}, moves = {"punch","lowSlash","lowKick","knee"}},
+        {sequence = {"g","g","h","h","y"}, moves = {"punch","lowSlash","lowKick","knee","heavySlash"}},
+        {sequence = {"g","g","g","h","h"}, moves = {"punch","lowSlash","punch","lowKick","knee"}},
+        {sequence = {"g","g","g","h","h","y"}, moves = {"punch","lowSlash","punch","lowKick","knee","heavySlash"}},
+        {sequence = {"g","g","g","y"}, moves = {"punch","lowSlash","punch","bigSlash"}},
+        {sequence = {"g","g","g"}, moves = {"punch","lowSlash","punch"}},
+        {sequence = {"g","g"}, moves = {"punch","lowSlash"}},
+        {sequence = {"h","h","y"}, moves = {"lowKick","knee","heavySlash"}},
+        {sequence = {"h","h"}, moves = {"lowKick","knee"}},
+        {sequence = {"g","y"}, moves = {"punch","hit1"}},
+        {sequence = {"y"}, moves = {"kick"}},
+        {sequence = {"h"}, moves = {"lowKick"}},
+        {sequence = {"g"}, moves = {"punch"}},
+    }
+
+    -- file d'exécution des moves (queued moves quand on est busy)
+    self.moveQueue = {}
+
+    self.moveQueueMax = 1  -- par exemple : max 3 moves en queue
+
+    -- Input buffer pour les touches
+    self.inputBuffer = {}         -- stocke les touches pressées
+    self.inputBufferTimer = 0     -- timer pour effacer le buffer
+    self.inputBufferMax = 0.7     -- max 0.4 secondes entre les touches
+    self.bufferedCombo = nil      -- combo prêt à être lancé
+    self.comboStep = 1            -- étape dans le combo en cours
+
     -- état du punch
     self.isPunching = false
     self.punchTimer = 0
@@ -131,11 +168,19 @@ function Player.new(x, y)
     return self
 end
 
+function Player:isBusy()
+    return self.isPunching or self.isLowSlashing or self.isLowKicking or
+           self.iskneeing or self.iskicking or self.ishit1ing or
+           self.isHeavySlashing or self.isBigSlashing
+end
+
 function Player:update(dt, other)
     self.movement:update(dt)
     self.animation:update(dt)
     self.collision:handle(other, dt)
     self.sprites.otherPlayer = other
+
+    local attackActive = self:isBusy()
 end
 
 function Player:draw()

@@ -69,5 +69,5 @@ function love.keypressed(key)
 
     -- Passer l’événement au joueur
     player:keypressed(key)
-    enemy:keypressed(key) -- si tu veux que l’ennemi réagisse aussi aux touches
+    -- enemy:keypressed(key) -- si tu veux que l’ennemi réagisse aussi aux touches
 end

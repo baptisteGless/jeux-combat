@@ -73,12 +73,12 @@ end
 
 -- Gravité et sol
 function Moveset.applyGravity(player, dt)
-    addDebugLog("applyGravity y=" ..
-        tostring(player.y) ..
-        " vel=" .. tostring(player.yVelocity) ..
-        " ground=" .. tostring(player.isOnGround) ..
-        "floorY = " .. tostring(player.groundY)
-    )
+    -- addDebugLog("applyGravity y=" ..
+    --     tostring(player.y) ..
+    --     " vel=" .. tostring(player.yVelocity) ..
+    --     " ground=" .. tostring(player.isOnGround) ..
+    --     "floorY = " .. tostring(player.groundY)
+    -- )
 
 
     player.y = player.y + player.yVelocity * dt
