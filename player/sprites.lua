@@ -227,30 +227,51 @@ function Sprites:getCurrentSprite()
     return sprite
 end
 
+-- multipliers pour les frames du roll
+Sprites.rollScaleMultipliers = { 
+    0.7,  -- frame 1
+    0.6,  -- frame 2
+    0.6,  -- frame 3
+    0.6,  -- frame 4
+    0.6,  -- frame 5
+    0.8   -- frame 6
+}
+
 function Sprites:draw()
     local p = self.player
     local sprite = self:getCurrentSprite()
     
+    -- facteur de réduction quand accroupi
+    local crouchScale = p.isCrouching and 0.7 or 1
+
     if type(sprite) == "table" then
         -- sprite = {img, scaleX, scaleY}
         local img = sprite.img
         local scaleX = sprite.scaleX
         local scaleY = sprite.scaleY
+        if p.animation.isRolling then
+            local frame = p.animation.currentFrame or 1
+            local rollMultiplier = Sprites.rollScaleMultipliers[frame] or 1
+            scaleX = scaleX * rollMultiplier
+            scaleY = scaleY * rollMultiplier
+        end
+        -- appliquer scale pour accroupissement
+        scaleY = scaleY * crouchScale 
         local w, h = img:getWidth(), img:getHeight()
         local drawX = p.x + p.width / 2
         local drawY = p.y + p.height
         local originX = w / 2
-        local originY = h
+        local originY = h * crouchScale  
 
         love.graphics.draw(img, drawX, drawY, 0, scaleX, scaleY, originX, originY)
     else
         -- ancien comportement (pour les poses fixes qui sont juste des images)
         local w, h = sprite:getWidth(), sprite:getHeight()
-        local scale = p.height / h
+        local scale = (p.height / h) * crouchScale
         local drawX = p.x + p.width / 2
         local drawY = p.y + p.height
         local originX = w / 2
-        local originY = h
+        local originY = h 
 
         love.graphics.draw(sprite, drawX, drawY, 0, scale, scale, originX, originY)
     end

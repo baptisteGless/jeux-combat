@@ -125,6 +125,36 @@ end
 function Movement:update(dt)
     local p = self.player
 
+    -- -------------------------------
+    -- Si un roll est demandé et que le player est libre
+    -- -------------------------------
+    if p.rollRequested and not p:isBusy() and not p.isRolling then
+        p.isRolling = true
+        p.rollRequested = false
+        p.rollTimer = p.rollDuration
+        local backward = (p.rollDirection == -1 and p.side == "D") or (p.rollDirection == 1 and p.side == "G")
+        p.animation:startRoll(p.rollDuration, backward)
+        return
+    end
+
+    -- Roulade (déplacement pendant roulade)
+    if p.isRolling then
+        local nextX = p.x + p.rollDirection * p.rollSpeed * dt
+        if nextX < 0 then nextX = 0 end
+        if nextX + p.width > love.graphics.getWidth() then
+            nextX = love.graphics.getWidth() - p.width
+        end
+        p.x = nextX
+        -- appliquer gravité (IMPORTANT)
+        Moveset.applyGravity(p, dt)
+        -- mettre à jour le timer
+        p.rollTimer = p.rollTimer - dt
+        if p.rollTimer <= 0 then
+            p.isRolling = false
+        end
+        return
+    end
+
     -- timer entre moves de la queue
     p.moveQueueTimer = p.moveQueueTimer or 0
     p.moveQueueDelay = p.moveQueueDelay or 0.05  -- 50ms mini entre moves
@@ -287,18 +317,6 @@ function Movement:update(dt)
         p.isBlocking = false
     end
 
-    -- Roulade (déplacement pendant roulade)
-    if p.isRolling then
-        local nextX = p.x + p.rollDirection * p.rollSpeed * dt
-        if nextX < 0 then
-            nextX = 0
-        elseif nextX + p.width > love.graphics.getWidth() then
-            nextX = love.graphics.getWidth() - p.width
-        end
-        p.x = nextX
-        return
-    end
-
     -- Si blocage -> pas de mouvement ni saut
     if p.isBlocking then return end
 
@@ -332,18 +350,25 @@ function Movement:keypressed(key)
                 return
             end
             if t - p.lastKeyPressed[key] < p.doubleTapTime then
-                p.isRolling = true
-                p.rollDirection = rollDir
-                p.rollTimer = p.rollDuration
-                local backward = (rollDir == -1 and p.side == "D") or (rollDir == 1 and p.side == "G")
-                p.animation:startRoll(p.rollDuration, backward)
+                -- demander un roll pour après le coup en cours
+                p.rollRequested = true
+                p.rollDirection = rollDir     -- DIRECTION BONNE AU DOUBLE TAP
+                -- annuler combos existants
+                p.bufferedCombo = nil
+                p.comboStep = 1
+                p.moveQueue = {}
             end
             p.lastKeyPressed[key] = t
         end
         return
     end
 
-     -- ---------- LOGIQUE DYNAMIQUE DES COMBOS (moveQueue) ----------
+    -- Interdire les attaques en l'air
+    if not p.isOnGround or p.isRolling or p.isCrouching or p.isBlocking then
+        return
+    end
+
+    ---------- LOGIQUE DYNAMIQUE DES COMBOS (moveQueue) ----------
     -- reset buffer si timer expiré (déjà géré dans update, mais on double-check ici)
     if not p.inputBufferTimer or p.inputBufferTimer <= 0 then
         p.inputBuffer = {}

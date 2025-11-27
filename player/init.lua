@@ -30,6 +30,7 @@ function Player.new(x, y)
     self.focusTransitionDuration = 0.2
 
     -- Roulade
+    self.rollRequested = false
     self.isRolling = false
     self.rollDirection = 0
     self.rollTimer = 0
@@ -112,7 +113,7 @@ function Player.new(x, y)
     -- Input buffer pour les touches
     self.inputBuffer = {}         -- stocke les touches pressées
     self.inputBufferTimer = 0     -- timer pour effacer le buffer
-    self.inputBufferMax = 0.7     -- max 0.4 secondes entre les touches
+    self.inputBufferMax = 1     -- max 0.4 secondes entre les touches
     self.bufferedCombo = nil      -- combo prêt à être lancé
     self.comboStep = 1            -- étape dans le combo en cours
 
