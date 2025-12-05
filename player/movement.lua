@@ -288,6 +288,18 @@ function Movement:update(dt)
 
     if p.ishit1ing then
         p.hit1Timer = p.hit1Timer - dt
+        local ratio = p.hit1Timer / p.hit1Duration  -- entre 1 et 0
+        local advanceSpeed = 250 * ratio           -- finit en douceur (250 = à ajuster)
+
+        local dir = (p.side == "D") and 1 or -1
+        local nextX = p.x + dir * advanceSpeed * dt
+
+        if nextX < 0 then nextX = 0 end
+        if nextX + p.width > love.graphics.getWidth() then
+            nextX = love.graphics.getWidth() - p.width
+        end
+        p.x = nextX
+
         if p.hit1Timer <= 0 then
             p.ishit1ing = false
             p.animation:endhit1()
@@ -306,6 +318,18 @@ function Movement:update(dt)
 
     if p.isBigSlashing then
         p.bigSlashTimer = p.bigSlashTimer - dt
+        local ratio = p.bigSlashTimer / p.bigSlashDuration
+        local advanceSpeed = 250 * ratio   -- tu peux augmenter ici !
+
+        local dir = (p.side == "D") and 1 or -1
+        local nextX = p.x + dir * advanceSpeed * dt
+
+        if nextX < 0 then nextX = 0 end
+        if nextX + p.width > love.graphics.getWidth() then
+            nextX = love.graphics.getWidth() - p.width
+        end
+        p.x = nextX
+
         if p.bigSlashTimer <= 0 then
             p.isBigSlashing = false
             p.animation:endBigSlash()
@@ -367,7 +391,7 @@ function Movement:keypressed(key)
     local t = love.timer.getTime()
     addDebugLog("key=" .. tostring(key))
 
-    if key == "space" then
+    if key == "up" then
         if p.isOnGround and not p.isRolling and not p.isCrouching and not p.isBlocking then
             Moveset.jump(p)
         end
