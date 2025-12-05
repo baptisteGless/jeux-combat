@@ -49,7 +49,21 @@ function Sprites.new(player)
             love.graphics.newImage("images/perso_images/punch/punch4-D.png"),
         }
     }
-
+    -- bas-slash
+    self.basSlashFrames = {
+        G = {
+            love.graphics.newImage("images/perso_images/bas-slash/basS1-G.png"),
+            love.graphics.newImage("images/perso_images/bas-slash/basS2-G.png"),
+            love.graphics.newImage("images/perso_images/bas-slash/basS3-G.png"),
+            love.graphics.newImage("images/perso_images/bas-slash/basS4-G.png"),
+        },
+        D = {
+            love.graphics.newImage("images/perso_images/bas-slash/basS1-D.png"),
+            love.graphics.newImage("images/perso_images/bas-slash/basS2-D.png"),
+            love.graphics.newImage("images/perso_images/bas-slash/basS3-D.png"),
+            love.graphics.newImage("images/perso_images/bas-slash/basS4-D.png"),
+        }
+    }
     -- low-slash
     self.lowSlashFrames = {
         G = {
@@ -194,6 +208,8 @@ function Sprites:getCurrentSprite()
     elseif p.isBlocking then
         sprite = p.isCrouching and ((p.side=="G") and self.blockBasG or self.blockBasD)
                                   or ((p.side=="G") and self.blockHautG or self.blockHautD)
+    elseif p.animation.isBasSlashing then
+        sprite = safeFrame(self.basSlashFrames[p.side])
     elseif p.isCrouching then
         sprite = (p.side=="G") and self.poseBasG or self.poseBasD
     elseif p.animation.isBigSlashing then

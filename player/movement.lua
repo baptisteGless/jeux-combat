@@ -62,6 +62,12 @@ function Movement:executeMove(move)
         p.animation:startkick()
         p.lastAttack = move
 
+    elseif move == "basSlash" then
+        p.isBasSlashing = true
+        p.basSlashTimer = p.basSlashDuration
+        p.animation:startBasSlash()
+        p.lastAttack = move
+
     else
         -- move inconnu
         return false
@@ -301,6 +307,15 @@ function Movement:update(dt)
         return
     end
 
+    if p.isBasSlashing then
+        p.basSlashTimer = p.basSlashTimer - dt
+        if p.basSlashTimer <= 0 then
+            p.isBasSlashing = false
+            p.animation:endBasSlash()
+        end
+        return
+    end
+
     -- Gérer accroupissement
     if love.keyboard.isDown("down") and p.isOnGround and not p.isRolling then
         p.isCrouching = true
@@ -320,14 +335,15 @@ function Movement:update(dt)
     -- Si blocage -> pas de mouvement ni saut
     if p.isBlocking then return end
 
-    -- Si accroupi -> pas de déplacement ni saut
-    if p.isCrouching then return end
-
-    -- Déplacements gauche/droite
-    Moveset.move(p, dt)
-
-    -- Gravité
-    Moveset.applyGravity(p, dt)
+    -- Si accroupi -> bloquer seulement le déplacement et le saut
+    local canMove = not p.isCrouching
+    if canMove then
+        Moveset.move(p, dt)
+        Moveset.applyGravity(p, dt)
+    else
+        -- applique quand même la gravité
+        Moveset.applyGravity(p, dt)
+    end
 end
 
 -- keypressed : g/h/y mapped to moves; on appui on ajoute dans le buffer et on tente une détection
@@ -364,11 +380,32 @@ function Movement:keypressed(key)
     end
 
     -- Interdire les attaques en l'air
-    if not p.isOnGround or p.isRolling or p.isCrouching or p.isBlocking then
+    if not p.isOnGround or p.isRolling or p.isBlocking then
         return
     end
 
     ---------- LOGIQUE DYNAMIQUE DES COMBOS (moveQueue) ----------
+    -- Si on est accroupi, attaques spéciales accroupies
+    if p.isCrouching then
+        if key == "y" then
+            -- attaque bas-slash
+            if not p:isBusy() then
+                self:executeMove("basSlash")
+            else
+                -- le buffer marche toujours si combat en cours
+                if #p.moveQueue < p.moveQueueMax then
+                    table.insert(p.moveQueue, "basSlash")
+                else
+                    p.moveQueue[#p.moveQueue] = "basSlash"
+                end
+            end
+            return -- très important : ne pas passer dans la logique combo
+        end
+
+        -- Si accroupi mais autre touche, on NE fait pas d’attaque
+        return
+    end
+
     -- reset buffer si timer expiré (déjà géré dans update, mais on double-check ici)
     if not p.inputBufferTimer or p.inputBufferTimer <= 0 then
         p.inputBuffer = {}

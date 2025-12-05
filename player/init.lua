@@ -117,6 +117,11 @@ function Player.new(x, y)
     self.bufferedCombo = nil      -- combo prêt à être lancé
     self.comboStep = 1            -- étape dans le combo en cours
 
+    -- état du bas-slash
+    self.isBasSlashing = false
+    self.basSlashTimer = 0
+    self.basSlashDuration = 0.35 -- durée totale du bas-slash (à ajuster)
+
     -- état du punch
     self.isPunching = false
     self.punchTimer = 0
@@ -172,7 +177,8 @@ end
 function Player:isBusy()
     return self.isPunching or self.isLowSlashing or self.isLowKicking or
            self.iskneeing or self.iskicking or self.ishit1ing or
-           self.isHeavySlashing or self.isBigSlashing
+           self.isHeavySlashing or self.isBigSlashing or
+           self.isBasSlashing
 end
 
 function Player:update(dt, other)

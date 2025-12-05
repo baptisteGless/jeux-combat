@@ -20,6 +20,7 @@ function Animation.new(player)
     self.ishit1ing = false
     self.isHeavySlashing = false
     self.isBigSlashing = false
+    self.isBasSlashing = false
     return self
 end
 
@@ -174,6 +175,29 @@ end
 
 function Animation:endLowSlash()
     self.isLowSlashing = false
+    self.currentFrame = 1
+end
+
+function Animation:startBasSlash()
+    self.isBasSlashing = true
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endBasSlash()
+    self.isBasSlashing = false
     self.currentFrame = 1
 end
 
@@ -360,6 +384,21 @@ function Animation:update(dt)
 
         local newFrame = math.floor(self.frameTimer / frameTime) + 1
         if newFrame ~= self.currentFrame and newFrame <= #lowSlashFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion bas-slash ===
+    if self.isBasSlashing then
+        self.frameTimer = self.frameTimer + dt
+
+        local basSlashFrames = self.player.sprites.basSlashFrames[self.player.side]
+        local frameTime = (self.player.basSlashDuration / #basSlashFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #basSlashFrames then
             self.currentFrame = newFrame
         end
 

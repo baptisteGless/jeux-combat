@@ -25,13 +25,6 @@ function Moveset.move(player, dt, other)
         return
     end
 
-    -- Mettre à jour orientation du personnage
-    -- if moveDir == -1 then
-    --     player.side = "G"
-    -- elseif moveDir == 1 then
-    --     player.side = "D"
-    -- end
-
     -- Vérifie bord de fenêtre
     local atLeftEdge = (player.x <= 0)
     local atRightEdge = (player.x + player.width >= love.graphics.getWidth())
@@ -73,13 +66,6 @@ end
 
 -- Gravité et sol
 function Moveset.applyGravity(player, dt)
-    -- addDebugLog("applyGravity y=" ..
-    --     tostring(player.y) ..
-    --     " vel=" .. tostring(player.yVelocity) ..
-    --     " ground=" .. tostring(player.isOnGround) ..
-    --     "floorY = " .. tostring(player.groundY)
-    -- )
-
 
     player.y = player.y + player.yVelocity * dt
     if not player.isOnGround then
