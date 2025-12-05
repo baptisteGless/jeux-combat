@@ -184,6 +184,28 @@ function Sprites.new(player)
         }
     }
 
+    -- shop
+    self.shopFrames = {
+        G = {
+            love.graphics.newImage("images/perso_images/shop/shop1-G.png"),
+            love.graphics.newImage("images/perso_images/shop/shop2-G.png"),
+            love.graphics.newImage("images/perso_images/shop/shop3-G.png"),
+            love.graphics.newImage("images/perso_images/shop/shop4-G.png"),
+            love.graphics.newImage("images/perso_images/shop/shop5-G.png"),
+            love.graphics.newImage("images/perso_images/shop/shop6-G.png"),
+            love.graphics.newImage("images/perso_images/shop/shop7-G.png"),
+        },
+        D = {
+            love.graphics.newImage("images/perso_images/shop/shop1-D.png"),
+            love.graphics.newImage("images/perso_images/shop/shop2-D.png"),
+            love.graphics.newImage("images/perso_images/shop/shop3-D.png"),
+            love.graphics.newImage("images/perso_images/shop/shop4-D.png"),
+            love.graphics.newImage("images/perso_images/shop/shop5-D.png"),
+            love.graphics.newImage("images/perso_images/shop/shop6-D.png"),
+            love.graphics.newImage("images/perso_images/shop/shop7-D.png"),
+        }
+    }
+
     return self
 end
 
@@ -226,6 +248,8 @@ function Sprites:getCurrentSprite()
         sprite = safeFrame(self.lowKickFrames[p.side])
     elseif p.animation.isLowSlashing then
         sprite = safeFrame(self.lowSlashFrames[p.side])
+    elseif p.animation.isShoping then
+        sprite = safeFrame(self.shopFrames[p.side])
     elseif p.animation.isPunching then
         sprite = safeFrame(self.punchFrames[p.side])
     elseif p.animation.isWalking then
@@ -260,6 +284,9 @@ function Sprites:draw()
     -- facteur de réduction quand accroupi
     local crouchScale = p.isCrouching and 0.7 or 1
 
+    -- facteur spécial pour shop
+    local shopScale = (sprite and p.animation.isShoping) and 1.1 or 1
+
     if type(sprite) == "table" then
         -- sprite = {img, scaleX, scaleY}
         local img = sprite.img
@@ -272,18 +299,18 @@ function Sprites:draw()
             scaleY = scaleY * rollMultiplier
         end
         -- appliquer scale pour accroupissement
-        scaleY = scaleY * crouchScale 
+        scaleY = scaleY * crouchScale * shopScale
         local w, h = img:getWidth(), img:getHeight()
         local drawX = p.x + p.width / 2
         local drawY = p.y + p.height
         local originX = w / 2
-        local originY = h * crouchScale  
+        local originY = h * crouchScale * shopScale
 
         love.graphics.draw(img, drawX, drawY, 0, scaleX, scaleY, originX, originY)
     else
         -- ancien comportement (pour les poses fixes qui sont juste des images)
         local w, h = sprite:getWidth(), sprite:getHeight()
-        local scale = (p.height / h) * crouchScale
+        local scale = (p.height / h) * crouchScale * shopScale
         local drawX = p.x + p.width / 2
         local drawY = p.y + p.height
         local originX = w / 2

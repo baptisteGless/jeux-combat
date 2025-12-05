@@ -68,6 +68,12 @@ function Movement:executeMove(move)
         p.animation:startBasSlash()
         p.lastAttack = move
 
+    elseif move == "shop" then
+        p.isShoping = true
+        p.shopTimer = p.shopDuration
+        p.animation:startShop()
+        p.lastAttack = move
+
     else
         -- move inconnu
         return false
@@ -316,6 +322,15 @@ function Movement:update(dt)
         return
     end
 
+    if p.isShoping then
+        p.shopTimer = p.shopTimer - dt
+        if p.shopTimer <= 0 then
+            p.isShoping = false
+            p.animation:endShop()
+        end
+        return
+    end
+
     -- Gérer accroupissement
     if love.keyboard.isDown("down") and p.isOnGround and not p.isRolling then
         p.isCrouching = true
@@ -403,6 +418,13 @@ function Movement:keypressed(key)
         end
 
         -- Si accroupi mais autre touche, on NE fait pas d’attaque
+        return
+    end
+
+    if key == "j" then
+        if p.isOnGround and not p.isRolling and not p.isCrouching and not p.isBlocking and not p:isBusy()then
+            self:executeMove("shop")
+        end
         return
     end
 

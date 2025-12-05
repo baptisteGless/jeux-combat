@@ -21,6 +21,7 @@ function Animation.new(player)
     self.isHeavySlashing = false
     self.isBigSlashing = false
     self.isBasSlashing = false
+    self.isShoping = false
     return self
 end
 
@@ -223,6 +224,30 @@ function Animation:endPunch()
     self.currentFrame = 1
 end
 
+function Animation:startShop()
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+    self.isShoping = true
+
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endShop()
+    self.isShoping = false
+    self.currentFrame = 1
+end
+
 function Animation:startWalk(moveDir)
     local p = self.player
     if self.isJumping then return end -- pas d’anim de marche en l’air
@@ -414,6 +439,21 @@ function Animation:update(dt)
 
         local newFrame = math.floor(self.frameTimer / frameTime) + 1
         if newFrame ~= self.currentFrame and newFrame <= #punchFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion shop ===
+    if self.isShoping then
+        self.frameTimer = self.frameTimer + dt
+
+        local shopFrames = self.player.sprites.shopFrames[self.player.side]
+        local frameTime = (self.player.shopDuration / #shopFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #shopFrames then
             self.currentFrame = newFrame
         end
 

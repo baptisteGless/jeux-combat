@@ -122,6 +122,11 @@ function Player.new(x, y)
     self.basSlashTimer = 0
     self.basSlashDuration = 0.35 -- durée totale du bas-slash (à ajuster)
 
+    -- état du shop
+    self.isShoping = false
+    self.shopTimer = 0
+    self.shopDuration = 0.7 -- durée totale du punch (à ajuster)
+
     -- état du punch
     self.isPunching = false
     self.punchTimer = 0
@@ -178,7 +183,7 @@ function Player:isBusy()
     return self.isPunching or self.isLowSlashing or self.isLowKicking or
            self.iskneeing or self.iskicking or self.ishit1ing or
            self.isHeavySlashing or self.isBigSlashing or
-           self.isBasSlashing
+           self.isBasSlashing or self.isShoping
 end
 
 function Player:update(dt, other)
