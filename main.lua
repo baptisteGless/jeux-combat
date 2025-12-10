@@ -1,5 +1,5 @@
 local Player = require("player")  -- ça charge player/init.lua automatiquement
-local Enemy = require("enemy")    -- si tu veux garder une classe Enemy séparée
+local Enemy = require("enemy")    -- ça charge enemy/init.lua automatiquement
 
 debugLog = ""
 local MAX_DEBUG_LINES = 10
@@ -33,13 +33,13 @@ function love.load()
     player = Player.new(200, screenHeight - 150)
 
     -- Créer l’ennemi (autre Player pour l’instant)
-    enemy = Player.new(screenWidth - 400, screenHeight - 150)
+    enemy = Enemy.new(screenWidth - 400, screenHeight - 150, player)
 end
 
 function love.update(dt)
     -- Mise à jour du joueur et de l’ennemi
     player:update(dt, enemy)
-    -- enemy:update(dt, player)
+    enemy:update(dt, player)
 
     -- Gestion orientation (tu peux l’intégrer dans update si tu veux)
     player:updateOrientation(enemy)

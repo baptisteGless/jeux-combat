@@ -10,6 +10,12 @@ end
 
 -- Déplacement gauche/droite
 function Moveset.move(player, dt, other)
+
+    if player.isEnemy then
+        player.animation:stopWalk()
+        return
+    end
+    
     if player.isCrouching then
         player.animation:stopWalk()
         return
