@@ -57,6 +57,11 @@ function Enemy.new(x, y, target)
 
     self.isEnemy = true -- pour différencier les mouvement du joueur et de l'énemie
 
+    
+    self.state = "idle"      -- peut être "idle", "hitBas"
+    self.hitTimer = 0
+    self.hitDuration = 0.25  -- durée de l’animation du coup reçu
+
     -- Sous-modules
     self.movement = Movement.new(self)
     self.animation = Animation.new(self)

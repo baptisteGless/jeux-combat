@@ -73,6 +73,15 @@ function Movement:update(dt)
     local e = self.enemy
 
     local canMove = not e.isCrouching
+
+     -- Gestion de l’animation du hit bas
+    if e.state == "hitBas" then
+        e.hitTimer = e.hitTimer + dt
+        if e.hitTimer >= e.hitDuration then
+            e.state = "idle"
+        end
+    end
+
     if canMove then
         Moveset.move(e, dt)
         Moveset.applyGravity(e, dt)

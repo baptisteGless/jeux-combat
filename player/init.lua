@@ -179,6 +179,24 @@ function Player.new(x, y)
     return self
 end
 
+function Player:getAttackHitbox()
+    if self.isBasSlashing then
+        local w = 60   -- largeur du coup
+        local h = 30   -- hauteur du coup
+        local x, y = self.x, self.y + self.height - h
+
+        if self.side == "D" then
+            x = x + self.width   -- hitbox devant
+        else
+            x = x - w            -- hitbox devant à gauche
+        end
+
+        return { x = x, y = y, width = w, height = h }
+    end
+
+    return nil
+end
+
 function Player:isBusy()
     return self.isPunching or self.isLowSlashing or self.isLowKicking or
            self.iskneeing or self.iskicking or self.ishit1ing or

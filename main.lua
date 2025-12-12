@@ -4,6 +4,13 @@ local Enemy = require("enemy")    -- ça charge enemy/init.lua automatiquement
 debugLog = ""
 local MAX_DEBUG_LINES = 10
 
+function checkCollision(a, b)
+    return a.x < b.x + b.width and
+           a.x + a.width > b.x and
+           a.y < b.y + b.height and
+           a.y + a.height > b.y
+end
+
 function addDebugLog(line)
     -- Découpe en lignes
     local lines = {}
@@ -44,6 +51,13 @@ function love.update(dt)
     -- Gestion orientation (tu peux l’intégrer dans update si tu veux)
     player:updateOrientation(enemy)
     enemy:updateOrientation(player)
+    
+    local atk = player:getAttackHitbox()
+    if atk and checkCollision(atk, enemy) then
+        addDebugLog("---hit detecté---")
+        enemy.state = "hitBas"
+        enemy.hitTimer = 0
+    end
 end
 
 function love.draw()

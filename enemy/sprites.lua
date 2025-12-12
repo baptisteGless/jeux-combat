@@ -7,12 +7,35 @@ function Sprites.new(enemy)
     self.enemy = enemy
     self.poseG = love.graphics.newImage("images/perso_images/pose-G.png")
     self.poseD = love.graphics.newImage("images/perso_images/pose-D.png")
+
+    -- bad-bas-hit
+    self.bbhFrames = {
+        G = {
+            love.graphics.newImage("images/perso_images/bad-bas-hit/bbh1-G.png"),
+            love.graphics.newImage("images/perso_images/bad-bas-hit/bbh2-G.png"),
+        },
+        D = {
+            love.graphics.newImage("images/perso_images/bad-bas-hit/bbh1-D.png"),
+            love.graphics.newImage("images/perso_images/bad-bas-hit/bbh2-D.png"),
+        }
+    }
+
     return self
 end
 
 function Sprites:getCurrentSprite()
     local e = self.enemy
-    -- Pour l’instant, l’ennemi n’a pas d’animations :
+
+    -- Animation quand il se fait toucher par un bas-slash
+    if e.state == "hitBas" then
+        local frames = self.bbhFrames[e.side]
+        local frame = math.floor((e.hitTimer / e.hitDuration) * #frames) + 1
+        
+        if frame > #frames then frame = #frames end
+        return frames[frame]
+    end
+
+    -- Idling
     return (e.side == "G") and self.poseG or self.poseD
 end
 
