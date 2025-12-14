@@ -55,7 +55,7 @@ function love.update(dt)
     local atk = player:getAttackHitbox()
     if atk and checkCollision(atk, enemy) then
         addDebugLog("---hit detecté---")
-        enemy.state = "hitBas"
+        enemy.state = atk.type 
         enemy.hitTimer = 0
     end
 end

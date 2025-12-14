@@ -80,6 +80,11 @@ function Movement:update(dt)
         if e.hitTimer >= e.hitDuration then
             e.state = "idle"
         end
+    elseif e.state == "hitHaut" then
+        e.hitTimer = e.hitTimer + dt
+        if e.hitTimer >= e.hitDuration then
+            e.state = "idle"
+        end
     end
 
     if canMove then

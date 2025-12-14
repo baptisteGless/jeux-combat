@@ -180,18 +180,105 @@ function Player.new(x, y)
 end
 
 function Player:getAttackHitbox()
-    if self.isBasSlashing then
+     -- On vérifie que l'animation est en bas slash ET sur la frame souhaitée
+    local anim = self.animation
+
+    if self.isBasSlashing and anim.currentFrame == 3 then
         local w = 60   -- largeur du coup
         local h = 30   -- hauteur du coup
         local x, y = self.x, self.y + self.height - h
 
         if self.side == "D" then
-            x = x + self.width   -- hitbox devant
+            x = x + self.width
         else
-            x = x - w            -- hitbox devant à gauche
+            x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h }
+        return { x = x, y = y, width = w, height = h, type = "hitBas" }
+    elseif self.isLowSlashing and anim.currentFrame == 2 then
+        local w = 25   -- largeur du coup
+        local h = 30   -- hauteur du coup
+        local x, y = self.x, self.y + self.height - h
+
+        if self.side == "D" then
+            x = x + self.width
+        else
+            x = x - w
+        end
+
+        return { x = x, y = y, width = w, height = h, type = "hitBas" }
+    elseif self.isLowKicking and anim.currentFrame == 2 then
+        local w = 30   -- largeur du coup
+        local h = 30   -- hauteur du coup
+        local x, y = self.x, self.y + self.height - h
+
+        if self.side == "D" then
+            x = x + self.width
+        else
+            x = x - w
+        end
+
+        return { x = x, y = y, width = w, height = h, type = "hitBas" }
+    elseif self.ishit1ing and anim.currentFrame == 2 then
+        local w = 60   -- largeur du coup
+        local h = 30   -- hauteur du coup
+        local x, y = self.x, self.y + self.height - h
+
+        if self.side == "D" then
+            x = x + self.width
+        else
+            x = x - w
+        end
+
+        return { x = x, y = y, width = w, height = h, type = "hitHaut" }
+    elseif self.isHeavySlashing and anim.currentFrame == 3 then
+        local w = 60   -- largeur du coup
+        local h = 30   -- hauteur du coup
+        local x, y = self.x, self.y + self.height - h
+
+        if self.side == "D" then
+            x = x + self.width
+        else
+            x = x - w
+        end
+
+        return { x = x, y = y, width = w, height = h, type = "hitHaut" }
+    elseif self.iskneeing and anim.currentFrame == 2 then
+        local w = 20   -- largeur du coup
+        local h = 30   -- hauteur du coup
+        local x, y = self.x, self.y + self.height - h
+
+        if self.side == "D" then
+            x = x + self.width
+        else
+            x = x - w
+        end
+
+        return { x = x, y = y, width = w, height = h, type = "hitHaut" }
+    elseif self.isBigSlashing and anim.currentFrame == 4 or self.isBigSlashing and anim.currentFrame == 5 then
+        local w = 60   -- largeur du coup
+        local h = 30   -- hauteur du coup
+        local x, y = self.x, self.y + self.height - h
+
+        if self.side == "D" then
+            x = x + self.width
+        else
+            x = x - w
+        end
+
+        return { x = x, y = y, width = w, height = h, type = "hitHaut" }
+    elseif self.isPunching and anim.currentFrame == 2 then
+        local w = 20   -- largeur du coup
+        local h = 30   -- hauteur du coup
+        local x, y = self.x, self.y + self.height - h
+
+        if self.side == "D" then
+            x = x + self.width
+        else
+            x = x - w
+        end
+
+        return { x = x, y = y, width = w, height = h, type = "hitHaut" }
     end
 
     return nil

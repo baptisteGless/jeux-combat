@@ -20,22 +20,39 @@ function Sprites.new(enemy)
         }
     }
 
+    -- bad-haut-hit
+    self.bhhFrames = {
+        G = {
+            love.graphics.newImage("images/perso_images/bad-haut-hit/bhh1-G.png"),
+            love.graphics.newImage("images/perso_images/bad-haut-hit/bhh2-G.png"),
+        },
+        D = {
+            love.graphics.newImage("images/perso_images/bad-haut-hit/bhh1-D.png"),
+            love.graphics.newImage("images/perso_images/bad-haut-hit/bhh2-D.png"),
+        }
+    }
+
     return self
 end
 
 function Sprites:getCurrentSprite()
     local e = self.enemy
 
-    -- Animation quand il se fait toucher par un bas-slash
+    -- Animation bas
     if e.state == "hitBas" then
         local frames = self.bbhFrames[e.side]
         local frame = math.floor((e.hitTimer / e.hitDuration) * #frames) + 1
-        
+        if frame > #frames then frame = #frames end
+        return frames[frame]
+
+    elseif e.state == "hitHaut" then
+        local frames = self.bhhFrames[e.side]
+        local frame = math.floor((e.hitTimer / e.hitDuration) * #frames) + 1
         if frame > #frames then frame = #frames end
         return frames[frame]
     end
 
-    -- Idling
+    -- Idle
     return (e.side == "G") and self.poseG or self.poseD
 end
 
