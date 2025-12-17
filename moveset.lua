@@ -11,8 +11,12 @@ end
 -- Déplacement gauche/droite
 function Moveset.move(player, dt, other)
 
+    if player.wantMove then
+        player.x = player.x + player.wantMove * player.speed * dt
+        player.wantMove = nil
+    end
+
     if player.isEnemy then
-        player.animation:stopWalk()
         return
     end
     

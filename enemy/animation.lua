@@ -251,10 +251,11 @@ end
 function Animation:startWalk(moveDir)
     local e = self.enemy
     if self.isJumping then return end -- pas d’anim de marche en l’air
-
-    local isForward = ((e.side == "D" and moveDir == 1) or
-                       (e.side == "G" and moveDir == -1))
-
+    addDebugLog("e.side=" .. tostring(e.side))
+    addDebugLog("moveDir=" .. tostring(moveDir))
+    local isForward = ((e.side == "G" and moveDir == -1) or
+                       (e.side == "D" and moveDir == 1))
+    addDebugLog("isForward=" .. tostring(isForward))
     self.walkType = isForward and "forward" or "backward"
 
     if not self.isWalking then
@@ -311,7 +312,222 @@ function Animation:update(dt)
     local e = self.enemy
 
     -- === Gestion big-slash ===
-    
+    if self.isBigSlashing then
+        self.frameTimer = self.frameTimer + dt
+
+        local bigSlashFrames = self.player.sprites.bigSlashFrames[self.player.side]
+        local frameTime = (self.player.bigSlashDuration / #bigSlashFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #bigSlashFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion heavy-slash ===
+    if self.isHeavySlashing then
+        self.frameTimer = self.frameTimer + dt
+
+        local heavySlashFrames = self.player.sprites.heavySlashFrames[self.player.side]
+        local frameTime = (self.player.heavySlashDuration / #heavySlashFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #heavySlashFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion hit1 ===
+    if self.ishit1ing then
+        self.frameTimer = self.frameTimer + dt
+
+        local hit1Frames = self.player.sprites.hit1Frames[self.player.side]
+        local frameTime = (self.player.hit1Duration / #hit1Frames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #hit1Frames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion kick ===
+    if self.iskicking then
+        self.frameTimer = self.frameTimer + dt
+
+        local kickFrames = self.player.sprites.kickFrames[self.player.side]
+        local frameTime = (self.player.kickDuration / #kickFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #kickFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion knee ===
+    if self.iskneeing then
+        self.frameTimer = self.frameTimer + dt
+
+        local kneeFrames = self.player.sprites.kneeFrames[self.player.side]
+        local frameTime = (self.player.kneeDuration / #kneeFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #kneeFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion low-kick ===
+    if self.isLowKicking then
+        self.frameTimer = self.frameTimer + dt
+
+        local lowKickFrames = self.player.sprites.lowKickFrames[self.player.side]
+        local frameTime = (self.player.lowKickDuration / #lowKickFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #lowKickFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion low-slash ===
+    if self.isLowSlashing then
+        self.frameTimer = self.frameTimer + dt
+
+        local lowSlashFrames = self.player.sprites.lowSlashFrames[self.player.side]
+        local frameTime = (self.player.lowSlashDuration / #lowSlashFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #lowSlashFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion bas-slash ===
+    if self.isBasSlashing then
+        self.frameTimer = self.frameTimer + dt
+
+        local basSlashFrames = self.player.sprites.basSlashFrames[self.player.side]
+        local frameTime = (self.player.basSlashDuration / #basSlashFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #basSlashFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion punch ===
+    if self.isPunching then
+        self.frameTimer = self.frameTimer + dt
+
+        local punchFrames = self.player.sprites.punchFrames[self.player.side]
+        local frameTime = (self.player.punchDuration / #punchFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #punchFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion shop ===
+    if self.isShoping then
+        self.frameTimer = self.frameTimer + dt
+
+        local shopFrames = self.player.sprites.shopFrames[self.player.side]
+        local frameTime = (self.player.shopDuration / #shopFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #shopFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion saut ===
+    if self.isJumping then
+        if self.jumpPhase == "start" then
+            -- saute 1 -> saute 2 rapidement
+            self.frameTimer = self.frameTimer + dt
+            if self.frameTimer > 0.1 then
+                self.currentFrame = 2
+                self.jumpPhase = "air"
+            end
+
+        elseif self.jumpPhase == "air" then
+            -- reste en saut3 tant qu’en l’air
+            if e.yVelocity > 0 then -- commence à descendre
+                self.currentFrame = 3
+            else
+                self.currentFrame = 2
+            end
+
+        elseif self.jumpPhase == "land" then
+            -- descente : saut2 puis saut1
+            self.currentFrame = self.currentFrame - 1
+            if self.currentFrame <= 1 then
+                self:endJump()
+            end
+        end
+        return
+    end
+
+    if self.isRolling then
+        self.frameTimer = self.frameTimer + dt
+
+        -- temps par frame = durée totale / nb de frames
+        local frameTime = self.rollDuration / self.rollFrameCount
+
+        -- calculer frame courante
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= self.rollFrameCount then
+            self.currentFrame = newFrame
+        end
+
+        -- roll terminé ?
+        if self.frameTimer >= self.rollDuration then
+            self:endRoll()
+        end
+
+        return
+    end
+
+    -- Conditions pour avancer les frames
+    if not self.isWalking or e.isBlocked or not e.isOnGround or e.isRolling then
+        return
+    end
+
+    self.frameTimer = self.frameTimer + dt
+    if self.frameTimer >= self.frameDuration then
+        self.frameTimer = self.frameTimer - self.frameDuration
+
+        -- Sélectionne le set de frames correct
+        local frames = (self.walkType == "forward")
+            and e.walkForwardFrames[e.side]
+            or e.walkBackwardFrames[e.side]
+
+        self.currentFrame = self.currentFrame + 1
+        if self.currentFrame > #frames then
+            self.currentFrame = 1
+        end
+    end
 end
 
 return Animation

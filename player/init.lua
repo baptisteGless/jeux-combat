@@ -69,7 +69,7 @@ function Player.new(x, y)
 
 
     -- Vitesse adaptée
-    self.speed = 400 * scale
+    self.speed = 300 * scale
 
     -- Saut adapté
     self.yVelocity = 0

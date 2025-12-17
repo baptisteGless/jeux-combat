@@ -13,6 +13,70 @@ end
 -- Exécute un move (doit être appelé uniquement quand le enemy n'est pas busy)
 function Movement:executeMove(move)
     local e = self.enemy
+    if move == "punch" then
+        e.isPunching = true
+        e.punchTimer = e.punchDuration
+        e.animation:startPunch()
+        e.lastAttack = move
+
+    elseif move == "lowSlash" then
+        e.isLowSlashing = true
+        e.lowSlashTimer = e.lowSlashDuration
+        e.animation:startLowSlash()
+        e.lastAttack = move
+
+    elseif move == "bigSlash" then
+        e.isBigSlashing = true
+        e.bigSlashTimer = e.bigSlashDuration
+        e.animation:startBigSlash()
+        e.lastAttack = move
+
+    elseif move == "lowKick" then
+        e.isLowKicking = true
+        e.lowKickTimer = e.lowKickDuration
+        e.animation:startLowKick()
+        e.lastAttack = move
+
+    elseif move == "knee" then
+        e.iskneeing = true
+        e.kneeTimer = e.kneeDuration
+        e.animation:startknee()
+        e.lastAttack = move
+
+    elseif move == "heavySlash" then
+        e.isHeavySlashing = true
+        e.heavySlashTimer = e.heavySlashDuration
+        e.animation:startHeavySlash()
+        e.lastAttack = move
+
+    elseif move == "hit1" then
+        e.ishit1ing = true
+        e.hit1Timer = e.hit1Duration
+        e.animation:starthit1()
+        e.lastAttack = move
+
+    elseif move == "kick" then
+        e.iskicking = true
+        e.kickTimer = e.kickDuration
+        e.animation:startkick()
+        e.lastAttack = move
+
+    elseif move == "basSlash" then
+        e.isBasSlashing = true
+        e.basSlashTimer = e.basSlashDuration
+        e.animation:startBasSlash()
+        e.lastAttack = move
+
+    elseif move == "shop" then
+        e.isShoping = true
+        e.shopTimer = e.shopDuration
+        e.animation:startShop()
+        e.lastAttack = move
+
+    else
+        -- move inconnu
+        return false
+    end
 
     return true
 end
@@ -72,8 +136,6 @@ end
 function Movement:update(dt)
     local e = self.enemy
 
-    local canMove = not e.isCrouching
-
      -- Gestion de l’animation du hit bas
     if e.state == "hitBas" then
         e.hitTimer = e.hitTimer + dt
@@ -87,150 +149,253 @@ function Movement:update(dt)
         end
     end
 
+    -- -------------------------------
+    -- Si un roll est demandé et que l'enemy est libre
+    -- -------------------------------
+    if e.rollRequested and not e:isBusy() and not e.isRolling then
+        e.isRolling = true
+        e.wantMove = nil
+        e.rollRequested = false
+        e.rollTimer = e.rollDuration
+        local backward = (e.rollDirection == -1 and e.side == "D") or (e.rollDirection == 1 and e.side == "G")
+        e.animation:startRoll(e.rollDuration, backward)
+        return
+    end
+
+    -- Roulade (déplacement pendant roulade)
+    if e.isRolling then
+        local nextX = e.x + e.rollDirection * e.rollSpeed * dt
+        if nextX < 0 then nextX = 0 end
+        if nextX + e.width > love.graphics.getWidth() then
+            nextX = love.graphics.getWidth() - e.width
+        end
+        e.x = nextX
+        -- mettre à jour le timer
+        e.rollTimer = e.rollTimer - dt
+        if e.rollTimer <= 0 then
+            e.isRolling = false
+        end
+        return
+    end
+
+    -- timer entre moves de la queue
+    e.moveQueueTimer = e.moveQueueTimer or 0
+    e.moveQueueDelay = e.moveQueueDelay or 0.05  -- 50ms mini entre moves
+
+    if e.moveQueueTimer > 0 then
+        e.moveQueueTimer = e.moveQueueTimer - dt
+    end
+
+    -- 1) si on a des moves en queue et qu'on n'est pas occupé -> exécute le premier
+    if e.moveQueue and #e.moveQueue > 0 and not e:isBusy() and e.moveQueueTimer <= 0 then
+        local nextMove = table.remove(e.moveQueue, 1)
+        self:executeMove(nextMove)
+        e.moveQueueTimer = e.moveQueueDelay
+        return
+    end
+
+    -- 2) mettre à jour timer du buffer d'input (expire le buffer)
+    if e.inputBufferTimer and e.inputBufferTimer > 0 then
+        e.inputBufferTimer = e.inputBufferTimer - dt
+        if e.inputBufferTimer <= 0 then
+            e.inputBuffer = {}
+        end
+    end
+
+    if e.bufferedAttack and not e:isBusy() then
+        local k = e.bufferedAttack
+        e.bufferedAttack = nil
+
+        -- ne pas continuer avant la fin de l'attaque
+        return
+    end
+
+
+    -- Mettre à jour le timer du buffer de touches (inputBuffer)
+    if e.inputBufferTimer and e.inputBufferTimer > 0 then
+        e.inputBufferTimer = e.inputBufferTimer - dt
+        if e.inputBufferTimer <= 0 then
+            e.inputBuffer = {}
+        end
+    end
+
+    -- Si on a un combo bufferisé (suite à une détection), et si on n'est pas occupé,
+    -- on exécute l'étape suivante du combo (coup par coup).
+    if e.bufferedCombo and not e:isBusy() then
+        local move = e.bufferedCombo.moves[e.comboStep]
+        if move then
+            -- exécution sûre (on vérifie encore e:isBusy() dans executeMove)
+            -- si le premier coup du combo est identique à l'attaque déjà faite,
+            -- on saute cette étape
+            if e.comboStep == 2 then
+                if e.bufferedCombo.moves[1] == e.lastAttack then
+                    e.comboStep = 3
+                end
+            end
+            if self:executeMove(move) then
+                e.comboStep = e.comboStep + 1
+                -- si on a fini le bufferedCombo -> reset
+                if e.comboStep > #e.bufferedCombo.moves then
+                    e.bufferedCombo = nil
+                    e.comboStep = 1
+                end
+            end
+        else
+            e.bufferedCombo = nil
+            e.comboStep = 1
+        end
+    end
+
+    -- === gestion des timers d'attaques (lock tant que l'attaque n'est pas terminée) ===
+    if e.isPunching then
+        e.punchTimer = e.punchTimer - dt
+        if e.punchTimer <= 0 then
+            e.isPunching = false
+            e.animation:endPunch()
+        end
+        return
+    end
+
+    if e.isLowSlashing then
+        e.lowSlashTimer = e.lowSlashTimer - dt
+        if e.lowSlashTimer <= 0 then
+            e.isLowSlashing = false
+            e.animation:endLowSlash()
+        end
+        return
+    end
+
+    if e.isLowKicking then
+        e.lowKickTimer = e.lowKickTimer - dt
+        if e.lowKickTimer <= 0 then
+            e.isLowKicking = false
+            e.animation:endLowKick()
+        end
+        return
+    end
+
+    if e.iskneeing then
+        e.kneeTimer = e.kneeTimer - dt
+        if e.kneeTimer <= 0 then
+            e.iskneeing = false
+            e.animation:endknee()
+        end
+        return
+    end
+
+    if e.iskicking then
+        e.kickTimer = e.kickTimer - dt
+        if e.kickTimer <= 0 then
+            e.iskicking = false
+            e.animation:endkick()
+        end
+        return
+    end
+
+    if e.ishit1ing then
+        e.hit1Timer = e.hit1Timer - dt
+        local ratio = e.hit1Timer / e.hit1Duration  -- entre 1 et 0
+        local advanceSpeed = 250 * ratio           -- finit en douceur (250 = à ajuster)
+
+        local dir = (e.side == "D") and 1 or -1
+        local nextX = e.x + dir * advanceSpeed * dt
+
+        if nextX < 0 then nextX = 0 end
+        if nextX + e.width > love.graphics.getWidth() then
+            nextX = love.graphics.getWidth() - e.width
+        end
+        e.x = nextX
+
+        if e.hit1Timer <= 0 then
+            e.ishit1ing = false
+            e.animation:endhit1()
+        end
+        return
+    end
+
+    if e.isHeavySlashing then
+        e.heavySlashTimer = e.heavySlashTimer - dt
+        if e.heavySlashTimer <= 0 then
+            e.isHeavySlashing = false
+            e.animation:endHeavySlash()
+        end
+        return
+    end
+
+    if e.isBigSlashing then
+        e.bigSlashTimer = e.bigSlashTimer - dt
+        local ratio = e.bigSlashTimer / e.bigSlashDuration
+        local advanceSpeed = 250 * ratio   -- tu peux augmenter ici !
+
+        local dir = (e.side == "D") and 1 or -1
+        local nextX = e.x + dir * advanceSpeed * dt
+
+        if nextX < 0 then nextX = 0 end
+        if nextX + e.width > love.graphics.getWidth() then
+            nextX = love.graphics.getWidth() - e.width
+        end
+        e.x = nextX
+
+        if e.bigSlashTimer <= 0 then
+            e.isBigSlashing = false
+            e.animation:endBigSlash()
+        end
+        return
+    end
+
+    if e.isBasSlashing then
+        e.basSlashTimer = e.basSlashTimer - dt
+        if e.basSlashTimer <= 0 then
+            e.isBasSlashing = false
+            e.animation:endBasSlash()
+        end
+        return
+    end
+
+    if e.isShoping then
+        e.shopTimer = e.shopTimer - dt
+        if e.shopTimer <= 0 then
+            e.isShoping = false
+            e.animation:endShop()
+        end
+        return
+    end
+
+    -- Si blocage -> pas de mouvement ni saut
+    if e.isBlocking then return end
+
+    -- Si accroupi -> bloquer seulement le déplacement et le saut
+    local canMove = not e.isCrouching
+    
     if canMove then
-        Moveset.move(e, dt)
+        -- déplacement AI si demandé
+        if e.wantMove and e.wantMove ~= 0 then
+            local speed = e.speed
+            local nextX = e.x + (e.wantMove * speed * dt)
+
+            -- collisions bord écran
+            if nextX < 0 then nextX = 0
+            elseif nextX + e.width > love.graphics.getWidth() then
+                nextX = love.graphics.getWidth() - e.width
+            end
+
+            e.x = nextX
+
+            if not e:isBusy() and not e.isRolling then
+                addDebugLog("==============================")
+                addDebugLog("e.side".. tostring(e.side))
+                e.animation:startWalk(e.wantMove)
+            end
+
+        else
+            e.animation:stopWalk()
+        end
+
+        -- appliquer gravité
         Moveset.applyGravity(e, dt)
     else
         -- applique quand même la gravité
         Moveset.applyGravity(e, dt)
-    end
-end
-
--- keypressed : g/h/y mapped to moves; on appui on ajoute dans le buffer et on tente une détection
-function Movement:keypressed(key)
-    local e = self.enemy
-    local t = love.timer.getTime()
-    addDebugLog("key=" .. tostring(key))
-
-    if key == "up" then
-        if e.isOnGround and not e.isRolling and not e.isCrouching and not e.isBlocking then
-            Moveset.jump(e)
-        end
-        return
-    end
-
-    if key == "left" or key == "right" then
-        if e.isOnGround and not e.isRolling then
-            local rollDir = (key == "left") and -1 or 1
-            if (rollDir == -1 and e:isAtLeftEdge()) or (rollDir == 1 and e:isAtRightEdge()) then
-                return
-            end
-            if t - e.lastKeyPressed[key] < e.doubleTapTime then
-                -- demander un roll pour après le coup en cours
-                e.rollRequested = true
-                e.rollDirection = rollDir     -- DIRECTION BONNE AU DOUBLE TAP
-                -- annuler combos existants
-                e.bufferedCombo = nil
-                e.comboStep = 1
-                e.moveQueue = {}
-            end
-            e.lastKeyPressed[key] = t
-        end
-        return
-    end
-
-    -- Interdire les attaques en l'air
-    if not e.isOnGround or e.isRolling or e.isBlocking then
-        return
-    end
-
-    ---------- LOGIQUE DYNAMIQUE DES COMBOS (moveQueue) ----------
-    -- Si on est accroupi, attaques spéciales accroupies
-    if e.isCrouching then
-        if key == "y" then
-            -- attaque bas-slash
-            if not e:isBusy() then
-                self:executeMove("basSlash")
-            else
-                -- le buffer marche toujours si combat en cours
-                if #e.moveQueue < e.moveQueueMax then
-                    table.insert(e.moveQueue, "basSlash")
-                else
-                    e.moveQueue[#e.moveQueue] = "basSlash"
-                end
-            end
-            return -- très important : ne pas passer dans la logique combo
-        end
-
-        -- Si accroupi mais autre touche, on NE fait pas d’attaque
-        return
-    end
-
-    if key == "j" then
-        if e.isOnGround and not e.isRolling and not e.isCrouching and not e.isBlocking and not e:isBusy()then
-            self:executeMove("shop")
-        end
-        return
-    end
-
-    -- reset buffer si timer expiré (déjà géré dans update, mais on double-check ici)
-    if not e.inputBufferTimer or e.inputBufferTimer <= 0 then
-        e.inputBuffer = {}
-    end
-
-    -- préparer le buffer temporaire (ce que serait le buffer après ce press)
-    local tmpBuffer = {}
-    for i=1,#e.inputBuffer do tmpBuffer[i] = e.inputBuffer[i] end
-    table.insert(tmpBuffer, key)
-
-    -- chercher le meilleur combo dont le prefix correspond à tmpBuffer
-    local bestCombo = nil
-    table.sort(e.comboDefinitions, function(a,b) return #a.sequence > #b.sequence end)
-    for _, combo in ipairs(e.comboDefinitions) do
-        local seq = combo.sequence
-        if #tmpBuffer <= #seq then
-            local ok = true
-            for i = 1, #tmpBuffer do
-                if tmpBuffer[i] ~= seq[i] then ok = false; break end
-            end
-            if ok then
-                -- priorité : le combo qui contient ce prefix (pas besoin de choisir par longueur ici)
-                bestCombo = combo
-                break
-            end
-        end
-    end
-
-    local intendedMove = nil
-
-    if bestCombo then
-        -- la touche correspond à l'étape ##tmpBuffer dans bestCombo
-        intendedMove = bestCombo.moves[#tmpBuffer]
-        -- si on a complété la séquence complètement, on efface le buffer (evite re-détection)
-        if #tmpBuffer == #bestCombo.sequence then
-            e.inputBuffer = {}
-            e.inputBufferTimer = 0
-        else
-            -- sinon on met à jour le buffer réel (on conserve tmpBuffer)
-            e.inputBuffer = tmpBuffer
-            e.inputBufferTimer = e.inputBufferMax
-        end
-    else
-        -- aucun combo ne commence par ce prefix -> fallback : move simple par touche
-        if key == "g" then intendedMove = "punch"
-        elseif key == "h" then intendedMove = "lowKick"
-        elseif key == "y" then intendedMove = "kick"
-        else
-            -- touches non mappées : on les ajoute au buffer quand même
-            e.inputBuffer = tmpBuffer
-            e.inputBufferTimer = e.inputBufferMax
-        end
-    end
-
-    -- si on a déterminé un move à faire maintenant ou en queue
-    if intendedMove then
-        if not e:isBusy() then
-            -- exécute maintenant
-            self:executeMove(intendedMove)
-        else
-             -- met en queue pour exécution après la fin d'attaque
-            if #e.moveQueue < e.moveQueueMax then
-                table.insert(e.moveQueue, intendedMove)
-            else
-                -- si la queue est pleine, on écrase le dernier move
-                e.moveQueue[#e.moveQueue] = intendedMove
-            end
-        end
     end
 end
 
