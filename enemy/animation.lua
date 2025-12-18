@@ -315,8 +315,8 @@ function Animation:update(dt)
     if self.isBigSlashing then
         self.frameTimer = self.frameTimer + dt
 
-        local bigSlashFrames = self.player.sprites.bigSlashFrames[self.player.side]
-        local frameTime = (self.player.bigSlashDuration / #bigSlashFrames)
+        local bigSlashFrames = self.enemy.sprites.bigSlashFrames[self.enemy.side]
+        local frameTime = (self.enemy.bigSlashDuration / #bigSlashFrames)
 
         local newFrame = math.floor(self.frameTimer / frameTime) + 1
         if newFrame ~= self.currentFrame and newFrame <= #bigSlashFrames then
@@ -330,8 +330,8 @@ function Animation:update(dt)
     if self.isHeavySlashing then
         self.frameTimer = self.frameTimer + dt
 
-        local heavySlashFrames = self.player.sprites.heavySlashFrames[self.player.side]
-        local frameTime = (self.player.heavySlashDuration / #heavySlashFrames)
+        local heavySlashFrames = self.enemy.sprites.heavySlashFrames[self.enemy.side]
+        local frameTime = (self.enemy.heavySlashDuration / #heavySlashFrames)
 
         local newFrame = math.floor(self.frameTimer / frameTime) + 1
         if newFrame ~= self.currentFrame and newFrame <= #heavySlashFrames then
@@ -345,8 +345,8 @@ function Animation:update(dt)
     if self.ishit1ing then
         self.frameTimer = self.frameTimer + dt
 
-        local hit1Frames = self.player.sprites.hit1Frames[self.player.side]
-        local frameTime = (self.player.hit1Duration / #hit1Frames)
+        local hit1Frames = self.enemy.sprites.hit1Frames[self.enemy.side]
+        local frameTime = (self.enemy.hit1Duration / #hit1Frames)
 
         local newFrame = math.floor(self.frameTimer / frameTime) + 1
         if newFrame ~= self.currentFrame and newFrame <= #hit1Frames then
@@ -360,8 +360,8 @@ function Animation:update(dt)
     if self.iskicking then
         self.frameTimer = self.frameTimer + dt
 
-        local kickFrames = self.player.sprites.kickFrames[self.player.side]
-        local frameTime = (self.player.kickDuration / #kickFrames)
+        local kickFrames = self.enemy.sprites.kickFrames[self.enemy.side]
+        local frameTime = (self.enemy.kickDuration / #kickFrames)
 
         local newFrame = math.floor(self.frameTimer / frameTime) + 1
         if newFrame ~= self.currentFrame and newFrame <= #kickFrames then
@@ -375,8 +375,8 @@ function Animation:update(dt)
     if self.iskneeing then
         self.frameTimer = self.frameTimer + dt
 
-        local kneeFrames = self.player.sprites.kneeFrames[self.player.side]
-        local frameTime = (self.player.kneeDuration / #kneeFrames)
+        local kneeFrames = self.enemy.sprites.kneeFrames[self.enemy.side]
+        local frameTime = (self.enemy.kneeDuration / #kneeFrames)
 
         local newFrame = math.floor(self.frameTimer / frameTime) + 1
         if newFrame ~= self.currentFrame and newFrame <= #kneeFrames then
@@ -390,8 +390,8 @@ function Animation:update(dt)
     if self.isLowKicking then
         self.frameTimer = self.frameTimer + dt
 
-        local lowKickFrames = self.player.sprites.lowKickFrames[self.player.side]
-        local frameTime = (self.player.lowKickDuration / #lowKickFrames)
+        local lowKickFrames = self.enemy.sprites.lowKickFrames[self.enemy.side]
+        local frameTime = (self.enemy.lowKickDuration / #lowKickFrames)
 
         local newFrame = math.floor(self.frameTimer / frameTime) + 1
         if newFrame ~= self.currentFrame and newFrame <= #lowKickFrames then
@@ -405,8 +405,8 @@ function Animation:update(dt)
     if self.isLowSlashing then
         self.frameTimer = self.frameTimer + dt
 
-        local lowSlashFrames = self.player.sprites.lowSlashFrames[self.player.side]
-        local frameTime = (self.player.lowSlashDuration / #lowSlashFrames)
+        local lowSlashFrames = self.enemy.sprites.lowSlashFrames[self.enemy.side]
+        local frameTime = (self.enemy.lowSlashDuration / #lowSlashFrames)
 
         local newFrame = math.floor(self.frameTimer / frameTime) + 1
         if newFrame ~= self.currentFrame and newFrame <= #lowSlashFrames then
@@ -420,8 +420,8 @@ function Animation:update(dt)
     if self.isBasSlashing then
         self.frameTimer = self.frameTimer + dt
 
-        local basSlashFrames = self.player.sprites.basSlashFrames[self.player.side]
-        local frameTime = (self.player.basSlashDuration / #basSlashFrames)
+        local basSlashFrames = self.enemy.sprites.basSlashFrames[self.enemy.side]
+        local frameTime = (self.enemy.basSlashDuration / #basSlashFrames)
 
         local newFrame = math.floor(self.frameTimer / frameTime) + 1
         if newFrame ~= self.currentFrame and newFrame <= #basSlashFrames then
@@ -435,8 +435,8 @@ function Animation:update(dt)
     if self.isPunching then
         self.frameTimer = self.frameTimer + dt
 
-        local punchFrames = self.player.sprites.punchFrames[self.player.side]
-        local frameTime = (self.player.punchDuration / #punchFrames)
+        local punchFrames = self.enemy.sprites.punchFrames[self.enemy.side]
+        local frameTime = (self.enemy.punchDuration / #punchFrames)
 
         local newFrame = math.floor(self.frameTimer / frameTime) + 1
         if newFrame ~= self.currentFrame and newFrame <= #punchFrames then
@@ -450,8 +450,8 @@ function Animation:update(dt)
     if self.isShoping then
         self.frameTimer = self.frameTimer + dt
 
-        local shopFrames = self.player.sprites.shopFrames[self.player.side]
-        local frameTime = (self.player.shopDuration / #shopFrames)
+        local shopFrames = self.enemy.sprites.shopFrames[self.enemy.side]
+        local frameTime = (self.enemy.shopDuration / #shopFrames)
 
         local newFrame = math.floor(self.frameTimer / frameTime) + 1
         if newFrame ~= self.currentFrame and newFrame <= #shopFrames then

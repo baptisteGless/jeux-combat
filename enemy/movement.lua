@@ -10,6 +10,55 @@ function Movement.new(enemy)
     return self
 end
 
+function Movement:attackList(choice)
+    local e = self.enemy
+
+    if e:isBusy() then return end  
+
+    e.moveQueue = e.moveQueue or {}
+    if #e.moveQueue > 6 then
+        e.moveQueue = {}
+    end
+
+    if choice == "1" then
+        table.insert(e.moveQueue, "punch")
+
+    elseif choice == "2" then
+        table.insert(e.moveQueue, "punch")
+        table.insert(e.moveQueue, "lowSlash")
+
+    elseif choice == "3" then
+        table.insert(e.moveQueue, "punch")
+        table.insert(e.moveQueue, "lowSlash")
+        table.insert(e.moveQueue, "punch")
+
+    elseif choice == "4" then
+        table.insert(e.moveQueue, "punch")
+        table.insert(e.moveQueue, "lowSlash")
+        table.insert(e.moveQueue, "punch")
+        table.insert(e.moveQueue, "bigSlash")
+
+    elseif choice == "5" then
+        table.insert(e.moveQueue, "kick")
+
+    elseif choice == "6" then
+        table.insert(e.moveQueue, "lowKick")
+
+    elseif choice == "7" then 
+        table.insert(e.moveQueue, "lowKick")
+        table.insert(e.moveQueue, "knee")
+
+    elseif choice == "8" then 
+        table.insert(e.moveQueue, "lowKick")
+        table.insert(e.moveQueue, "knee")
+        table.insert(e.moveQueue, "heavySlash")
+
+    elseif choice == "9" then 
+        table.insert(e.moveQueue, "punch")
+        table.insert(e.moveQueue, "hit1")
+    end
+end
+
 -- Exécute un move (doit être appelé uniquement quand le enemy n'est pas busy)
 function Movement:executeMove(move)
     local e = self.enemy
@@ -79,58 +128,6 @@ function Movement:executeMove(move)
     end
 
     return true
-end
-
--- Cherche dans comboDefinitions :
---  * un FULL match (taille séquence <= buffer et queue égale) -> renvoie combo
---  * sinon si buffer est un PREFIX de l'une des sequences -> indique qu'on doit attendre
-local function findComboMatch(e)
-    local buffer = e.inputBuffer
-    local bLen = #buffer
-
-    local possiblePrefix = false
-    -- d'abord check full matches (priorité aux combos les plus longs)
-    -- (itérer sur toutes les définitions ; si tu veux priorité différente, change l'ordre)
-    for _, combo in ipairs(e.comboDefinitions) do
-        local seq = combo.sequence
-        local sLen = #seq
-        if bLen >= sLen then
-            -- comparer la queue du buffer avec seq
-            local ok = true
-            for i = 1, sLen do
-                if buffer[bLen - sLen + i] ~= seq[i] then
-                    ok = false; break
-                end
-            end
-            if ok then
-                return "full", combo
-            end
-        end
-    end
-
-    -- ensuite vérifier si buffer correspond au prefix de n'importe quel combo
-    for _, combo in ipairs(e.comboDefinitions) do
-        local seq = combo.sequence
-        local sLen = #seq
-        if bLen < sLen then
-            local ok = true
-            for i = 1, bLen do
-                if buffer[i] ~= seq[i] then
-                    ok = false; break
-                end
-            end
-            if ok then
-                possiblePrefix = true
-                break
-            end
-        end
-    end
-
-    if possiblePrefix then
-        return "prefix", nil
-    end
-
-    return "none", nil
 end
 
 function Movement:update(dt)

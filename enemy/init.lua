@@ -40,6 +40,56 @@ function Enemy.new(x, y, target)
     self.frameDuration = 0.08
     self.walkDirection = 1 -- -1 gauche, 1 droite
 
+    -- état du bas-slash
+    self.isBasSlashing = false
+    self.basSlashTimer = 0
+    self.basSlashDuration = 0.35 -- durée totale du bas-slash (à ajuster)
+
+    -- état du shop
+    self.isShoping = false
+    self.shopTimer = 0
+    self.shopDuration = 0.7 -- durée totale du punch (à ajuster)
+
+    -- état du punch
+    self.isPunching = false
+    self.punchTimer = 0
+    self.punchDuration = 0.35 -- durée totale du punch (à ajuster)
+
+    -- état de low-slash
+    self.isLowSlashing = false
+    self.lowSlashTimer = 0
+    self.lowSlashDuration = 0.35 -- durée totale du low-slash (à ajuster)
+
+    -- état de low-kick
+    self.isLowKicking = false
+    self.lowKickTimer = 0
+    self.lowKickDuration = 0.35 -- durée totale du low-kick (à ajuster)
+
+    -- état de knee
+    self.iskneeing = false
+    self.kneeTimer = 0
+    self.kneeDuration = 0.35 -- durée totale du knee (à ajuster)
+
+    -- état de kick
+    self.iskicking = false
+    self.kickTimer = 0
+    self.kickDuration = 0.5 -- durée totale du kick (à ajuster)
+
+    -- état de hit1
+    self.ishit1ing = false
+    self.hit1Timer = 0
+    self.hit1Duration = 0.35 -- durée totale du hit1 (à ajuster)
+
+    -- état de heavy-slash
+    self.isHeavySlashing = false
+    self.heavySlashTimer = 0
+    self.heavySlashDuration = 0.4 -- durée totale du heavy-slash (à ajuster)
+
+    -- état de big-slash
+    self.isBigSlashing = false
+    self.bigSlashTimer = 0
+    self.bigSlashDuration = 0.7 -- durée totale du big-slash (à ajuster)
+
     self.ai = AI.new(self, target)
 
     -- Dimensions du joueur adaptées
@@ -95,7 +145,10 @@ function Enemy.new(x, y, target)
 end
 
 function Enemy:isBusy()
-    return self.state ~= "idle"
+    return self.isPunching or self.isLowSlashing or self.isLowKicking or
+           self.iskneeing or self.iskicking or self.ishit1ing or
+           self.isHeavySlashing or self.isBigSlashing or
+           self.isBasSlashing or self.isShoping or self.state ~= "idle"
 end
 
 function Enemy:update(dt,other)

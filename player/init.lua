@@ -220,6 +220,18 @@ function Player:getAttackHitbox()
 
         return { x = x, y = y, width = w, height = h, type = "hitBas" }
     elseif self.ishit1ing and anim.currentFrame == 2 then
+        local w = 20   -- largeur du coup
+        local h = 30   -- hauteur du coup
+        local x, y = self.x, self.y + self.height - h
+
+        if self.side == "D" then
+            x = x + self.width
+        else
+            x = x - w
+        end
+
+        return { x = x, y = y, width = w, height = h, type = "hitHaut" }
+    elseif self.iskicking and anim.currentFrame == 2 then
         local w = 60   -- largeur du coup
         local h = 30   -- hauteur du coup
         local x, y = self.x, self.y + self.height - h
