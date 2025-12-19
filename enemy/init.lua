@@ -23,6 +23,14 @@ function Enemy.new(x, y, target)
     local scaleY = screenHeight / refHeight
     local scale = math.min(scaleX, scaleY) -- garder proportions correctes
 
+    self.isCrouching = false
+    -- blockage
+    self.isBlocking = false
+    self.blockTimer = 0
+    self.blockDuration = 0.35
+    self.wantBlock = nil
+    self.blockType = nil
+
      -- Roulade
     self.rollRequested = false
     self.isRolling = false
@@ -127,8 +135,9 @@ function Enemy.new(x, y, target)
 
     self.isEnemy = true -- pour différencier les mouvement du joueur et de l'énemie
 
-    
-    self.state = "idle"      -- peut être "idle", "hitBas"
+    self.isStunned = false
+    self.directionatk = "idle"
+    self.state = false      -- peut être "idle", "hitBas"
     self.hitTimer = 0
     self.hitDuration = 0.25  -- durée de l’animation du coup reçu
 
@@ -148,7 +157,7 @@ function Enemy:isBusy()
     return self.isPunching or self.isLowSlashing or self.isLowKicking or
            self.iskneeing or self.iskicking or self.ishit1ing or
            self.isHeavySlashing or self.isBigSlashing or
-           self.isBasSlashing or self.isShoping or self.state ~= "idle"
+           self.isBasSlashing or self.isShoping or self.state or self.isStunned
 end
 
 function Enemy:update(dt,other)

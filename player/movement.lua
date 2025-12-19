@@ -389,7 +389,7 @@ end
 function Movement:keypressed(key)
     local p = self.player
     local t = love.timer.getTime()
-    addDebugLog("key=" .. tostring(key))
+    -- addDebugLog("key=" .. tostring(key))
 
     if key == "up" then
         if p.isOnGround and not p.isRolling and not p.isCrouching and not p.isBlocking then

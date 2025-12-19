@@ -8,8 +8,8 @@ function AI.new(enemy, target)
     self.target = target
 
     self.pauseTimer = 0
-    self.pauseChance = 0.10      -- 40% de chance de faire rien
-    self.pauseMin = 0.5         -- mini 0.20s de pause
+    self.pauseChance = 0.05      -- 5% de chance de faire rien
+    self.pauseMin = 0.05         -- mini 0.20s de pause
     self.pauseMax = 0.10         -- maxi 0.60s de pause
 
     self.thinkTimer = 0
@@ -116,56 +116,130 @@ function AI:update(dt)
 
     self.attackCooldown = self.attackCooldown - dt
 
-    -- Si l'ennemi est touché, il ne décide rien
-    if e.state ~= "idle" or e:isBusy() then
-        return
-    end
+    -- Distance horizontale
+    local dist = math.abs(e.x - p.x)
+    local dirToPlayer = (p.x > e.x) and 1 or -1
 
+    local screenWidth = love.graphics.getWidth()
+
+    -- murs IA
+    local eAtLeftWall  = (e.x <= 5)
+    local eAtRightWall = (e.x + e.width >= screenWidth - 5)
+
+    -- murs joueur
+    local pAtLeftWall  = (p.x <= 5)
+    local pAtRightWall = (p.x + p.width >= screenWidth - 5)
+
+    -- addDebugLog("eAtLeftWall=" .. tostring(eAtLeftWall))
+    -- addDebugLog("eAtRightWall=" .. tostring(eAtRightWall))
+    -- addDebugLog("dist=" .. tostring(dist))
     -- si en pause, on décompte et on ne fait rien
     if self.pauseTimer > 0 then
         self.pauseTimer = self.pauseTimer - dt
+        e.wantBlock = nil
+        e.isBlocking = false
         e.wantMove = 0
         return
     end
 
-    local dist = distance(e, p)
-    local dirToPlayer = (p.x > e.x) and 1 or -1
+    -- local dist = distance(e, p)
+    -- local dirToPlayer = (p.x > e.x) and 1 or -1
 
-    -- ===============================
-    -- ESQUIVE SI LE JOUEUR ATTAQUE
-    -- ===============================
-    if p:isBusy() then
-        -- si trop proche -> ROLL OBLIGATOIRE
-        if dist < 140 then
-            -- CHANCE DE PAUSE
-            if self:canPause(dist) and math.random() < self.pauseChance then
-                self.pauseTimer = math.random(self.pauseMin, self.pauseMax)
-                e.wantMove = 0
-                return
-            end
-
-            e.rollRequested = true
-            -- 70% de chance de reculer
-            e.rollDirection = (math.random() < 0.7) and -dirToPlayer or dirToPlayer
-            return
-        end
-        -- CHANCE DE PAUSE
-        if self:canPause(dist) and math.random() < self.pauseChance then
-            self.pauseTimer = math.random(self.pauseMin, self.pauseMax)
-            e.wantMove = 0
-            return
-        end
-        -- sinon reculer franchement
-        e.wantMove = -dirToPlayer
+    if e.directionatk == "hitHaut" and dist < 110 and math.random() < 0.10 then
+        -- addDebugLog("BLOCK HAUT")
+        e.isCrouching = false
+        e.wantBlock = "haut"
+        e.isBlocking = true
+        e.blockType = e.wantBlock
+        e.wantMove = nil
+        return
+    elseif e.directionatk == "hitBas" and dist < 110 and math.random() < 0.10 then  --and math.random() < 0.95
+        -- addDebugLog("BLOCK BAS")
+        e.isCrouching = true
+        e.wantBlock = "bas"
+        e.isBlocking = true
+        e.blockType = e.wantBlock
+        e.wantMove = nil
         return
     end
 
+    -- si trop proche -> ROLL à 70% de chance 
+    local proba = math.random()
+    if (e.directionatk == "hitHaut" or e.directionatk == "hitBas") and dist < 110 and proba < 0.7 and not e.isStunned and not e.state then
+        if proba < 0.4 then 
+            -- direction naturelle = s'éloigner du joueur
+            local rollDir = -dirToPlayer
+
+            -----------------------------------------------------------
+            --  IA contre un mur → elle doit rouler en avant :
+            -----------------------------------------------------------
+            if rollDir == -1 and eAtLeftWall  then rollDir = 1  end
+            if rollDir ==  1 and eAtRightWall then rollDir = -1 end
+
+            -----------------------------------------------------------
+            --  IA veut rouler vers le joueur →
+            -- vérifier si un mur est derrière le joueur :
+            -----------------------------------------------------------
+            if rollDir == dirToPlayer then    
+                if dirToPlayer == 1 and pAtRightWall then
+                    rollDir = -1
+                elseif dirToPlayer == -1 and pAtLeftWall then
+                    rollDir = 1
+                end
+            end
+
+            -----------------------------------------------------------
+            -- Dans le cas extrême où les deux sens sont invalides
+            -- rollDir peut se retrouver bloqué… Alors on roule dans
+            -- le seul sens non-mur, même vers joueur.
+            -----------------------------------------------------------
+            if rollDir == -1 and eAtLeftWall then 
+                rollDir = 1
+            elseif rollDir == 1 and eAtRightWall then
+                rollDir = -1
+            end
+
+            -----------------------------------------------------------
+            -- Appliquer roulade finale
+            -----------------------------------------------------------
+            addDebugLog("---hit detecté---")
+            e.isCrouching = false
+            e.wantBlock = nil
+            e.isBlocking = false
+            e.rollRequested = true
+            e.rollDirection = rollDir
+            return
+        end
+
+        ---------------------------------------
+        -- RECULER (60% CHANCE)
+        ---------------------------------------
+        local backDir = -dirToPlayer
+
+        -----------------------------------------------------------
+        -- si mur derrière IA → ne pas reculer
+        -----------------------------------------------------------
+
+        if backDir == -1 and eAtLeftWall then
+            backDir = 0
+        elseif backDir == 1 and eAtRightWall then
+            backDir = 0
+        end
+
+        e.isCrouching = false
+        e.wantBlock = nil
+        e.isBlocking = false
+        e.wantMove = backDir
+        return
+    end 
 
     -- ===============================
     -- ATTAQUE SI À BONNE DISTANCE
     -- ===============================
-    if dist < 140 and not e:isBusy() and self.attackCooldown <= 0 then
-
+    if dist < 100 and not e:isBusy() and self.attackCooldown <= 0 then
+        e.isCrouching = false
+        e.wantBlock = nil
+        e.isBlocking = false
         local attackID = self:chooseAttack(dist)
 
         if attackID then
@@ -174,9 +248,9 @@ function AI:update(dt)
             -- cooldown intelligent
             self.attackCooldown = 0.45 + math.random() * 0.25
             -- pause seulement APRES attaque
-            if math.random() < 0.45 then
-                self.pauseTimer = math.random(0.15, 0.45)
-            end
+            -- if math.random() < self.pauseChance then
+            --     self.pauseTimer = math.random(self.pauseMin, self.pauseMax)
+            -- end
         end
         return
     end
@@ -184,37 +258,62 @@ function AI:update(dt)
     -- ===============================
     -- SE RAPPROCHER
     -- ===============================
-    if dist > 200 then
+    if dist < 67 then
+        e.wantMove = 0
+        return
+    end
+
+    if dist >= 70 and not e:isBusy() then
         e.wantMove = dirToPlayer
         return
     end
 
-    if dist > 160 then
+    if dist < 70 and math.random() < 0.15 then
         -- CHANCE DE PAUSE
-        if self:canPause(dist) and math.random() < self.pauseChance then
-            self.pauseTimer = math.random(self.pauseMin, self.pauseMax)
-            e.wantMove = 0
+        -- if self:canPause(dist) and math.random() < self.pauseChance then
+        --     self.pauseTimer = math.random(self.pauseMin, self.pauseMax)
+        --     return
+        -- end
+        if not eAtRightWall or not eAtLeftWall then
+            e.isCrouching = false
+            e.wantBlock = nil
+            e.isBlocking = false
+            e.wantMove = -dirToPlayer
             return
         end
-        e.wantMove = dirToPlayer
-        return
     end
-    if dist < 75 then
-        -- CHANCE DE PAUSE
-        if self:canPause(dist) and math.random() < self.pauseChance then
-            self.pauseTimer = math.random(self.pauseMin, self.pauseMax)
-            e.wantMove = 0
-            return
-        end
-        e.wantMove = -dirToPlayer
-        return
-    end
+    -- if dist < 10 then
+    --     -- CHANCE DE PAUSE
+    --     -- if self:canPause(dist) and math.random() < self.pauseChance then
+    --     --     self.pauseTimer = math.random(self.pauseMin, self.pauseMax)
+    --     --     return
+    --     -- end
+    --     if not eAtRightWall or not eAtLeftWall then
+    --         e.isCrouching = false
+    --         e.wantBlock = nil
+    --         e.isBlocking = false
+    --         e.wantMove = -dirToPlayer
+    --         return
+    --     elseif math.random() < 0.25 then
+    --         e.rollRequested = true 
+    --         e.rollDirection = rollDir 
+    --         return
+    --     end
+    -- end
     -- ===============================
     -- MICRO-AJUSTEMENT / FEINTE
     -- ===============================
-    if math.random() < 0.25 then
-        e.wantMove = -dirToPlayer
-    end
+    -- if math.random() < 0.25 then
+    --     -- CHANCE DE PAUSE
+    --     if self:canPause(dist) and math.random() < self.pauseChance then
+    --         self.pauseTimer = math.random(self.pauseMin, self.pauseMax)
+    --         return
+    --     end
+    --     e.isCrouching = false
+    --     e.wantBlock = nil
+    --     e.isBlocking = false
+    --     e.wantMove = -dirToPlayer
+    -- end
 end
 
 return AI

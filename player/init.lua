@@ -183,7 +183,11 @@ function Player:getAttackHitbox()
      -- On vérifie que l'animation est en bas slash ET sur la frame souhaitée
     local anim = self.animation
 
-    if self.isBasSlashing and anim.currentFrame == 3 then
+    if self.isBasSlashing then
+        strick = false
+        if anim.currentFrame == 3 then
+            strick = true
+        end
         local w = 60   -- largeur du coup
         local h = 30   -- hauteur du coup
         local x, y = self.x, self.y + self.height - h
@@ -194,8 +198,12 @@ function Player:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitBas" }
-    elseif self.isLowSlashing and anim.currentFrame == 2 then
+        return { x = x, y = y, width = w, height = h, type = "hitBas", strick = strick }
+    elseif self.isLowSlashing then
+        strick = false
+        if anim.currentFrame == 2 then
+            strick = true
+        end
         local w = 25   -- largeur du coup
         local h = 30   -- hauteur du coup
         local x, y = self.x, self.y + self.height - h
@@ -206,8 +214,12 @@ function Player:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitBas" }
-    elseif self.isLowKicking and anim.currentFrame == 2 then
+        return { x = x, y = y, width = w, height = h, type = "hitBas", strick = strick }
+    elseif self.isLowKicking then
+        strick = false
+        if anim.currentFrame == 2 then
+            strick = true
+        end
         local w = 30   -- largeur du coup
         local h = 30   -- hauteur du coup
         local x, y = self.x, self.y + self.height - h
@@ -218,8 +230,12 @@ function Player:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitBas" }
-    elseif self.ishit1ing and anim.currentFrame == 2 then
+        return { x = x, y = y, width = w, height = h, type = "hitBas", strick = strick }
+    elseif self.ishit1ing then
+        strick = false
+        if anim.currentFrame == 2 then
+            strick = true
+        end
         local w = 20   -- largeur du coup
         local h = 30   -- hauteur du coup
         local x, y = self.x, self.y + self.height - h
@@ -230,8 +246,12 @@ function Player:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitHaut" }
-    elseif self.iskicking and anim.currentFrame == 2 then
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick }
+    elseif self.iskicking then
+        strick = false
+        if anim.currentFrame == 2 then
+            strick = true
+        end
         local w = 60   -- largeur du coup
         local h = 30   -- hauteur du coup
         local x, y = self.x, self.y + self.height - h
@@ -242,8 +262,12 @@ function Player:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitHaut" }
-    elseif self.isHeavySlashing and anim.currentFrame == 3 then
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick }
+    elseif self.isHeavySlashing then
+        strick = false
+        if anim.currentFrame == 3 then
+            strick = true
+        end
         local w = 60   -- largeur du coup
         local h = 30   -- hauteur du coup
         local x, y = self.x, self.y + self.height - h
@@ -254,8 +278,12 @@ function Player:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitHaut" }
-    elseif self.iskneeing and anim.currentFrame == 2 then
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick }
+    elseif self.iskneeing then
+        strick = false
+        if anim.currentFrame == 2 then
+            strick = true
+        end
         local w = 20   -- largeur du coup
         local h = 30   -- hauteur du coup
         local x, y = self.x, self.y + self.height - h
@@ -266,8 +294,12 @@ function Player:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitHaut" }
-    elseif self.isBigSlashing and anim.currentFrame == 4 or self.isBigSlashing and anim.currentFrame == 5 then
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick }
+    elseif self.isBigSlashing then
+        strick = false
+        if anim.currentFrame == 4 or anim.currentFrame == 5 then
+            strick = true
+        end
         local w = 60   -- largeur du coup
         local h = 30   -- hauteur du coup
         local x, y = self.x, self.y + self.height - h
@@ -278,8 +310,12 @@ function Player:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitHaut" }
-    elseif self.isPunching and anim.currentFrame == 2 then
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick }
+    elseif self.isPunching then
+        strick = false
+        if anim.currentFrame == 2 then
+            strick = true
+        end
         local w = 20   -- largeur du coup
         local h = 30   -- hauteur du coup
         local x, y = self.x, self.y + self.height - h
@@ -290,7 +326,7 @@ function Player:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitHaut" }
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick }
     end
 
     return nil

@@ -62,6 +62,9 @@ end
 -- Exécute un move (doit être appelé uniquement quand le enemy n'est pas busy)
 function Movement:executeMove(move)
     local e = self.enemy
+
+    if e.isStunned then return false end
+
     if move == "punch" then
         e.isPunching = true
         e.punchTimer = e.punchDuration
@@ -132,18 +135,111 @@ end
 
 function Movement:update(dt)
     local e = self.enemy
+    -- Si blocage -> pas de mouvement ni saut
+    if e.isBlocking then
+        e.blockTimer = e.blockTimer + dt
+        if e.blockTimer >= e.blockDuration then
+            e.isCrouching = false
+            e.isBlocking = false
+            e.directionatk = nil
+            e.blockTimer = 0
+        end
 
-     -- Gestion de l’animation du hit bas
-    if e.state == "hitBas" then
+        return -- tant qu'on bloque on ne bouge pas
+    end
+    -- Gestion de l’animation du hit bas
+    -- Si on vient d'être frappé -> on initie le stun
+    if (e.directionatk == "hitBas" or e.directionatk == "hitHaut") and not e.isStunned and e.isRolling == false and e.state then
+        
+        e.isStunned = true
+
+        -- reset mouvements/attaques
+        e.moveQueue = {}
+        e.bufferedAttack = nil
+        e.bufferedCombo = nil
+        e.comboStep = 1
+        e.wantMove = nil
+        e.rollRequested = false
+        e.isRolling = false
+        e.isBlocking = false
+        e.isWalking = false
+        e.isBasSlashing = false
+        e.isShoping = false
+        e.isPunching = false
+        e.isLowSlashing = false
+        e.isLowKicking = false
+        e.iskneeing = false
+        e.iskicking = false
+        e.ishit1ing = false
+        e.isHeavySlashing = false
+        e.isBigSlashing = false
+        e.isCrouching = false
+        -- timer reset
+        e.hitTimer = 0
+    end
+
+    -- si on est stun -> mise à jour timer stun
+    if e.isStunned then
         e.hitTimer = e.hitTimer + dt
+        e.rollRequested = false
+        e.isRolling = false
+        e.isBlocking = false
+        e.isWalking = false
+        e.isBasSlashing = false
+        e.isShoping = false
+        e.isPunching = false
+        e.isLowSlashing = false
+        e.isLowKicking = false
+        e.iskneeing = false
+        e.iskicking = false
+        e.ishit1ing = false
+        e.isHeavySlashing = false
+        e.isBigSlashing = false
+        e.isCrouching = false
+
         if e.hitTimer >= e.hitDuration then
-            e.state = "idle"
+            -- fin du stun
+            e.isStunned = false
+            e.directionatk = nil
+            e.hitTimer = 0
+            e.state = false
         end
-    elseif e.state == "hitHaut" then
-        e.hitTimer = e.hitTimer + dt
-        if e.hitTimer >= e.hitDuration then
-            e.state = "idle"
+
+        -- empêche tout le reste du code
+        return
+    end
+
+    -- Si accroupi -> bloquer seulement le déplacement et le saut
+    local canMove = not e.isCrouching
+    
+    if canMove then
+        -- déplacement AI si demandé
+        -- addDebugLog("e.wantMove=" .. tostring(e.wantMove))
+        if e.wantMove and e.wantMove ~= 0 then
+            local speed = e.speed
+            local nextX = e.x + (e.wantMove * speed * dt)
+
+            -- collisions bord écran
+            if nextX < 0 then nextX = 0
+            elseif nextX + e.width > love.graphics.getWidth() then
+                nextX = love.graphics.getWidth() - e.width
+            end
+
+            e.x = nextX
+
+            if not e:isBusy() and not e.isRolling then
+                e.animation:startWalk(e.wantMove)
+            end
+
+        else
+            e.animation:stopWalk()
         end
+
+        -- appliquer gravité
+        Moveset.applyGravity(e, dt)
+    else
+        -- applique quand même la gravité
+        Moveset.applyGravity(e, dt)
     end
 
     -- -------------------------------
@@ -358,42 +454,6 @@ function Movement:update(dt)
         return
     end
 
-    -- Si blocage -> pas de mouvement ni saut
-    if e.isBlocking then return end
-
-    -- Si accroupi -> bloquer seulement le déplacement et le saut
-    local canMove = not e.isCrouching
-    
-    if canMove then
-        -- déplacement AI si demandé
-        if e.wantMove and e.wantMove ~= 0 then
-            local speed = e.speed
-            local nextX = e.x + (e.wantMove * speed * dt)
-
-            -- collisions bord écran
-            if nextX < 0 then nextX = 0
-            elseif nextX + e.width > love.graphics.getWidth() then
-                nextX = love.graphics.getWidth() - e.width
-            end
-
-            e.x = nextX
-
-            if not e:isBusy() and not e.isRolling then
-                addDebugLog("==============================")
-                addDebugLog("e.side".. tostring(e.side))
-                e.animation:startWalk(e.wantMove)
-            end
-
-        else
-            e.animation:stopWalk()
-        end
-
-        -- appliquer gravité
-        Moveset.applyGravity(e, dt)
-    else
-        -- applique quand même la gravité
-        Moveset.applyGravity(e, dt)
-    end
 end
 
 return Movement

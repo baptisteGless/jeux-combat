@@ -251,14 +251,22 @@ end
 function Animation:startWalk(moveDir)
     local e = self.enemy
     if self.isJumping then return end -- pas d’anim de marche en l’air
-    addDebugLog("e.side=" .. tostring(e.side))
-    addDebugLog("moveDir=" .. tostring(moveDir))
     local isForward = ((e.side == "G" and moveDir == -1) or
                        (e.side == "D" and moveDir == 1))
-    addDebugLog("isForward=" .. tostring(isForward))
     self.walkType = isForward and "forward" or "backward"
 
     if not self.isWalking then
+         self.isBigSlashing = false
+        self.isHeavySlashing = false
+        self.ishit1ing = false
+        self.iskicking = false
+        self.iskneeing = false
+        self.isLowKicking = false
+        self.isLowSlashing = false
+        self.isPunching = false
+        self.isJumping = false
+        self.isRolling = false
+        self.isShoping = false
         self.isWalking = true
         self.currentFrame = 1
         self.frameTimer = 0

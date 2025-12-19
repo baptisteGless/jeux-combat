@@ -244,17 +244,26 @@ function Sprites:getCurrentSprite()
     end
 
     -- Animation bas
-    if e.state == "hitBas" then
+    -- addDebugLog("e.state" .. tostring(e.state))
+    -- addDebugLog("e.directionatk" .. tostring(e.directionatk))
+    if e.isBlocking then
+        if e.blockType == "bas" then
+            sprite = (e.side=="G") and self.blockBasG or self.blockBasD
+        else
+            sprite = (e.side=="G") and self.blockHautG or self.blockHautD
+        end
+    elseif e.state == true and e.directionatk == "hitBas" then
         local frames = self.bbhFrames[e.side]
         local frame = math.floor((e.hitTimer / e.hitDuration) * #frames) + 1
         if frame > #frames then frame = #frames end
         return frames[frame]
 
-    elseif e.state == "hitHaut" then
+    elseif e.state == true and e.directionatk == "hitHaut" then
         local frames = self.bhhFrames[e.side]
         local frame = math.floor((e.hitTimer / e.hitDuration) * #frames) + 1
         if frame > #frames then frame = #frames end
         return frames[frame]
+
     elseif e.animation.isRolling then
         sprite = safeFrame(self.rollFrames[e.side])
         if sprite and e.animation.rollBackward then
@@ -263,9 +272,6 @@ function Sprites:getCurrentSprite()
         end
     elseif e.animation.isJumping then
         sprite = safeFrame(e.jumpFrames and e.jumpFrames[e.side])
-    elseif e.isBlocking then
-        sprite = e.isCrouching and ((e.side=="G") and self.blockBasG or self.blockBasD)
-                                  or ((e.side=="G") and self.blockHautG or self.blockHautD)
     elseif e.animation.isBasSlashing then
         sprite = safeFrame(self.basSlashFrames[e.side])
     elseif e.isCrouching then
