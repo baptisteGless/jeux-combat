@@ -294,6 +294,58 @@ function Animation:endJump()
     self.currentFrame = 1
 end
 
+function Animation:startbbh()
+    self.isBBHing = true
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+    self.isShoping = false
+
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endbbh()
+    self.isBBHing = false
+    self.state = false 
+    self.currentFrame = 1
+end
+
+function Animation:startbhh()
+    self.isBHHing = true
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+    self.isShoping = false
+
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endbhh()
+    self.isBHHing = false
+    self.state = false 
+    self.currentFrame = 1
+end
+
 function Animation:startRoll(duration,backward)
     self.isRolling = true
     self.isWalking = false
@@ -318,6 +370,50 @@ end
 
 function Animation:update(dt)
     local e = self.enemy
+
+    -- == Gestion chute ==
+    if e.thrown then
+        self.frameTimer = self.frameTimer + dt
+
+        local frames = e.sprites.fallLow[e.side]
+        local frameTime = e.thrownDuration / #frames
+
+        self.currentFrame = math.min(
+            math.floor(self.frameTimer / frameTime) + 1,
+            #frames
+        )
+        return
+    end
+
+    -- == Gestion bbh ==
+    if self.isBBHing then
+        self.frameTimer = self.frameTimer + dt
+
+        local bbhFrames = self.enemy.sprites.bbhFrames[self.enemy.side]
+        local frameTime = (self.enemy.bbhDuration / #bbhFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #bbhFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- == Gestion bhh ==
+    if self.isBHHing then
+        self.frameTimer = self.frameTimer + dt
+
+        local bhhFrames = self.enemy.sprites.bhhFrames[self.enemy.side]
+        local frameTime = (self.enemy.bhhDuration / #bhhFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #bhhFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
 
     -- === Gestion big-slash ===
     if self.isBigSlashing then

@@ -134,12 +134,28 @@ function Enemy.new(x, y, target)
     self.side = "G" -- orientation par défaut (G = gauche, D = droite)
 
     self.isEnemy = true -- pour différencier les mouvement du joueur et de l'énemie
+    self.hitJustReceived = false
 
     self.isStunned = false
     self.directionatk = "idle"
-    self.state = false      -- peut être "idle", "hitBas"
-    self.hitTimer = 0
-    self.hitDuration = 0.25  -- durée de l’animation du coup reçu
+    self.state = false
+    self.isBBHing = false
+    self.isBHHing = false
+    -- self.hitTimer = 0
+    -- self.hitDuration = 0.2  -- durée de l’animation du coup reçu
+    self.bbhTimer = 0
+    self.bbhDuration = 0.2  -- durée de l’animation du coup reçu
+    self.bhhTimer = 0
+    self.bhhDuration = 0.2  -- durée de l’animation du coup reçu
+
+    -- Envoyer dans le decore
+    self.fall = false
+    self.thrown = false
+    self.thrownTimer = 0
+    self.thrownDuration = 0.8
+    self.compteHit = 0
+    self.limiteHit = 4
+    self.hitLock = false  
 
     -- Sous-modules
     self.movement = Movement.new(self)

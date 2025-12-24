@@ -65,6 +65,8 @@ function love.update(dt)
     if atk and checkCollision(atk, enemy) then
         enemy.state = atk.strick 
         enemy.hitTimer = 0
+        enemy.fall = atk.fall
+        enemy.hitJustReceived = true
     end
 end
 

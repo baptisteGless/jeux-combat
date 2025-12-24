@@ -61,6 +61,7 @@ end
 
 -- Exécute un move (doit être appelé uniquement quand le enemy n'est pas busy)
 function Movement:executeMove(move)
+
     local e = self.enemy
 
     if e.isStunned then return false end
@@ -135,65 +136,158 @@ end
 
 function Movement:update(dt)
     local e = self.enemy
+    -- addDebugLog("e.compteHit" .. tostring(e.compteHit))
+
+    if e.thrown then
+        e.thrownTimer = e.thrownTimer - dt
+
+        local push = 250 * dt
+        if e.side == "G" then
+            e.x = math.max(0, e.x - push)
+        else
+            e.x = math.min(love.graphics.getWidth() - e.width, e.x + push)
+        end
+
+        if e.thrownTimer <= 0 then
+            e.thrown = false
+        end
+
+        return -- aucune autre action possible
+    end
+
     -- Si blocage -> pas de mouvement ni saut
     if e.isBlocking then
+        e.compteHit = 0
         e.blockTimer = e.blockTimer + dt
         if e.blockTimer >= e.blockDuration then
             e.isCrouching = false
             e.isBlocking = false
-            e.directionatk = nil
+            e.directionatk = "idle"
             e.blockTimer = 0
         end
 
         return -- tant qu'on bloque on ne bouge pas
     end
-    -- Gestion de l’animation du hit bas
-    if (e.directionatk == "hitBas" or e.directionatk == "hitHaut") and not e.isStunned and e.isRolling == false and e.state then
-        e.isStunned = true
+
+    if e.animation.isBBHing then
+        e.bbhTimer = e.bbhTimer - dt
+        if e.bbhTimer <= 0 then
+            addDebugLog("------")
+            e.isStunned = false
+            e.directionatk = "idle"
+            e.hitTimer = 0
+            e.state = false
+            e.animation:endbbh()
+        end
+        return
+    end
+
+    if e.animation.isBHHing then
+        e.bhhTimer = e.bhhTimer - dt
+        if e.bhhTimer <= 0 then
+            addDebugLog("++++++")
+            e.isStunned = false
+            e.directionatk = "idle"
+            e.hitTimer = 0
+            e.state = false
+            e.animation:endbhh()
+        end
+        return
+    end
+
+    if e.state and not e.isRolling and not e.animation.isBBHing and not e.animation.isBHHing then
+        
+        -- if e.compteHit >= e.limiteHit and not e.thrown then
+        if e.fall and not e.thrown then
+            e.fall = false
+            e.thrown = true
+            e.thrownTimer = e.thrownDuration
+            e.compteHit = 0
+
+            e.isStunned = false
+            e.state = false
+            e.directionatk = "idle"
+            return
+        end
+
+        -- COUP BAS
+        if e.directionatk == "hitBas" then
+            -- bloqué SEULEMENT si accroupi + block
+            if not (e.isCrouching and e.isBlocking) then
+                -- addDebugLog("+++hitBas+++")
+                e.isStunned = true
+                e.moveQueue = {}
+                -- e.compteHit = e.compteHit + 1
+                e.bbhTimer = e.bbhDuration
+                e.isBlocking = false
+                e.isCrouching = false
+                e.state = false  
+                e.animation:startbbh()
+            end
+            return
+        end
+
+        -- COUP HAUT
+        if e.directionatk == "hitHaut" then
+            -- bloqué SEULEMENT si block debout
+            if not (e.isBlocking and not e.isCrouching) then
+                -- addDebugLog("+++hitHaut+++")
+                e.isStunned = true
+                e.moveQueue = {}
+                -- e.compteHit = e.compteHit + 1
+                e.bhhTimer = e.bhhDuration
+                e.state = false  
+                e.animation:startbhh()
+            end
+            return
+        end
     end
 
     -- si on est stun -> mise à jour timer stun
-    if e.isStunned then
-        e.hitTimer = e.hitTimer + dt
-        e.moveQueue = {}
-        e.rollRequested = false
-        e.animation.isRolling = false
-        e.isBlocking = false
-        e.isWalking = false
-        e.animation.isBasSlashing = false
-        e.animation.isShoping = false
-        e.animation.isPunching = false
-        e.animation.isLowSlashing = false
-        e.animation.isLowKicking = false
-        e.animation.iskneeing = false
-        e.animation.iskicking = false
-        e.animation.ishit1ing = false
-        e.animation.isHeavySlashing = false
-        e.animation.isBigSlashing = false
-        e.isCrouching = false
+    -- if e.isStunned then
+    --     -- e.hitTimer = e.hitTimer + dt
+    --     e.moveQueue = {}
+    --     e.rollRequested = false
+    --     e.animation.isRolling = false
+    --     e.isBlocking = false
+    --     e.isWalking = false
+    --     e.animation.isBasSlashing = false
+    --     e.animation.isShoping = false
+    --     e.animation.isPunching = false
+    --     e.animation.isLowSlashing = false
+    --     e.animation.isLowKicking = false
+    --     e.animation.iskneeing = false
+    --     e.animation.iskicking = false
+    --     e.animation.ishit1ing = false
+    --     e.animation.isHeavySlashing = false
+    --     e.animation.isBigSlashing = false
+    --     e.isCrouching = false
 
-        if e.hitTimer >= e.hitDuration then
-            -- fin du stun
-            e.isStunned = false
-            e.directionatk = nil
-            e.hitTimer = 0
-            e.state = false
-        end
+    --     -- if e.hitTimer >= e.hitDuration then
+    --     --     -- fin du stun
+    --     --     e.isStunned = false
+    --     --     e.directionatk = nil
+    --     --     e.hitTimer = 0
+    --     --     e.state = false
+    --     -- end
 
-        -- empêche tout le reste du code
-        return
-    end
+    --     -- empêche tout le reste du code
+    --     return
+    -- end
 
     -- Si accroupi -> bloquer seulement le déplacement et le saut
     local canMove = not e.isCrouching and not e.isRolling and not e.animation.isPunching 
         and not e.animation.isLowSlashing and not e.animation.isLowKicking and not e.animation.iskneeing and not e.animation.iskicking
         and not e.animation.ishit1ing and not e.animation.isHeavySlashing and not e.animation.isBigSlashing 
         and not e.animation.isBasSlashing and not e.animation.isShoping
-    
+    -- addDebugLog("canMove=" .. tostring(canMove))
     if canMove then
         -- déplacement AI si demandé
-        -- addDebugLog("e.wantMove=" .. tostring(e.wantMove))
         if e.wantMove and e.wantMove ~= 0 then
+            -- addDebugLog("============")
+            -- if e.compteHit > 0 then
+            --     addDebugLog("+++++++++")
+            -- end
             local speed = e.speed
             local nextX = e.x + (e.wantMove * speed * dt)
 
@@ -225,16 +319,19 @@ function Movement:update(dt)
     -- -------------------------------
     -- addDebugLog("e.rollTimer=" .. tostring(e.rollTimer))
     if e.rollRequested and not e:isBusy() and not e.isRolling then
-        e.wantMove = nil
+        -- addDebugLog("0000000000000")
+        e.isRolling = true
+        e.rollRequested = false
+        e.wantMove = 0
         e.rollTimer = e.rollDuration
         local backward = (e.rollDirection == -1 and e.side == "D") or (e.rollDirection == 1 and e.side == "G")
-        -- addDebugLog("backward=" .. tostring(backward))
+        e.animation:startRoll(e.rollDuration, backward)
         return
     end
 
     -- Roulade (déplacement pendant roulade)
     if e.isRolling then
-        e.animation:startRoll(e.rollDuration, backward)
+        -- addDebugLog("1111111111111")
         local nextX = e.x + e.rollDirection * e.rollSpeed * dt
         if nextX < 0 then nextX = 0 end
         if nextX + e.width > love.graphics.getWidth() then

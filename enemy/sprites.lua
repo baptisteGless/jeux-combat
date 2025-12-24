@@ -230,6 +230,28 @@ function Sprites.new(enemy)
         }
     }
 
+    -- fall-low
+    self.fallLow = {
+        G = {
+            love.graphics.newImage("images/perso_images/fall-low/fl1-G.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl2-G.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl3-G.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl4-G.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl5-G.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl6-G.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl7-G.png"),
+        },
+        D = {
+            love.graphics.newImage("images/perso_images/fall-low/fl1-D.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl2-D.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl3-D.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl4-D.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl5-D.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl6-D.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl7-D.png"),
+        }
+    }
+
     return self
 end
 
@@ -252,17 +274,21 @@ function Sprites:getCurrentSprite()
         else
             sprite = (e.side=="G") and self.blockHautG or self.blockHautD
         end
-    elseif e.state == true and e.directionatk == "hitBas" then
-        local frames = self.bbhFrames[e.side]
-        local frame = math.floor((e.hitTimer / e.hitDuration) * #frames) + 1
-        if frame > #frames then frame = #frames end
-        return frames[frame]
+    elseif e.thrown then
+        sprite = safeFrame(self.fallLow[e.side])
+    elseif e.animation.isBBHing then
+        sprite = safeFrame(self.bbhFrames[e.side])
+        -- local frames = self.bbhFrames[e.side]
+        -- local frame = math.floor((e.hitTimer / e.hitDuration) * #frames) + 1
+        -- if frame > #frames then frame = #frames end
+        -- return frames[frame]
 
-    elseif e.state == true and e.directionatk == "hitHaut" then
-        local frames = self.bhhFrames[e.side]
-        local frame = math.floor((e.hitTimer / e.hitDuration) * #frames) + 1
-        if frame > #frames then frame = #frames end
-        return frames[frame]
+    elseif e.animation.isBHHing then
+        sprite = safeFrame(self.bhhFrames[e.side])
+        -- local frames = self.bhhFrames[e.side]
+        -- local frame = math.floor((e.hitTimer / e.hitDuration) * #frames) + 1
+        -- if frame > #frames then frame = #frames end
+        -- return frames[frame]
 
     elseif e.animation.isRolling then
         sprite = safeFrame(self.rollFrames[e.side])

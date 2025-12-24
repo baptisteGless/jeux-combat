@@ -13,7 +13,7 @@ function AI.new(enemy, target)
     self.pauseMax = 0.10         -- maxi 0.60s de pause
 
     self.thinkTimer = 0
-     self.thinkDelay = 0.18
+    self.thinkDelay = 0.18
 
     -- COOL DOWN D'ATTAQUE
     self.attackCooldown = 0
@@ -108,11 +108,22 @@ function AI:update(dt)
     local e = self.enemy
     local p = self.target
 
+    if e.isStunned or e.animation.isBBHing or e.animation.isBHHing or e.thrown then
+        return
+    end
+
     if not p then return end
 
     self.thinkTimer = self.thinkTimer - dt
     if self.thinkTimer > 0 then return end
     self.thinkTimer = self.thinkDelay
+    -- intention par défaut
+    -- addDebugLog("e.wantMove" .. tostring(e.wantMove))
+    e.wantMove = e.wantMove or 0
+
+    if e.isStunned or e.animation.isBBHing or e.animation.isBHHing or e.thrown or e:isBusy() then
+        return
+    end
 
     self.attackCooldown = self.attackCooldown - dt
 
@@ -136,8 +147,10 @@ function AI:update(dt)
     -- si en pause, on décompte et on ne fait rien
     if self.pauseTimer > 0 then
         self.pauseTimer = self.pauseTimer - dt
-        e.wantBlock = nil
-        e.isBlocking = false
+        if e.isBlocking then
+            e.isBlocking = false
+            e.wantBlock = nil
+        end
         e.wantMove = 0
         return
     end
@@ -149,23 +162,28 @@ function AI:update(dt)
         -- addDebugLog("BLOCK HAUT")
         e.isCrouching = false
         e.wantBlock = "haut"
-        e.isBlocking = true
+        if e.isBlocking then
+            e.isBlocking = false
+            e.wantBlock = nil
+        end
         e.blockType = e.wantBlock
-        e.wantMove = nil
         return
     elseif e.directionatk == "hitBas" and dist < 110 and math.random() < 0.30 and not e.isStunned and not e.state then  --and math.random() < 0.95
         -- addDebugLog("BLOCK BAS")
         e.isCrouching = true
         e.wantBlock = "bas"
-        e.isBlocking = true
+        if e.isBlocking then
+            e.isBlocking = false
+            e.wantBlock = nil
+        end
         e.blockType = e.wantBlock
-        e.wantMove = nil
         return
     end
 
     -- si trop proche -> ROLL à 70% de chance 
     local proba = math.random()
-    if (e.directionatk == "hitHaut" or e.directionatk == "hitBas") and dist < 110 and proba < 0.7 and not e.isStunned and not e.state then
+    if e.hitJustReceived and dist < 110 and proba < 0.7 and not e.isStunned and not e.state then
+        addDebugLog("e.directionatk =" .. tostring(e.directionatk ))
         if proba < 0.5 then 
             -- direction naturelle = s'éloigner du joueur
             local rollDir = -dirToPlayer
@@ -204,10 +222,13 @@ function AI:update(dt)
             -----------------------------------------------------------
             -- addDebugLog("---hit detecté---")
             e.isCrouching = false
-            e.wantBlock = nil
-            e.isBlocking = false
+            if e.isBlocking then
+                e.isBlocking = false
+                e.wantBlock = nil
+            end
             e.rollRequested = true
             e.rollDirection = rollDir
+            e.hitJustReceived = false
             return
         end
 
@@ -227,8 +248,10 @@ function AI:update(dt)
         end
 
         e.isCrouching = false
-        e.wantBlock = nil
-        e.isBlocking = false
+        if e.isBlocking then
+            e.isBlocking = false
+            e.wantBlock = nil
+        end
         e.wantMove = backDir
         return
     end 
@@ -240,8 +263,10 @@ function AI:update(dt)
     if dist < 100 and not e:isBusy() and self.attackCooldown <= 0 then
         e.isCrouching = false
         e.wantBlock = nil
-        e.wantMove = nil
-        e.isBlocking = false
+        if e.isBlocking then
+            e.isBlocking = false
+            e.wantBlock = nil
+        end
         local attackID = self:chooseAttack(dist)
 
         if attackID then
@@ -278,8 +303,10 @@ function AI:update(dt)
         -- end
         if not eAtRightWall or not eAtLeftWall then
             e.isCrouching = false
-            e.wantBlock = nil
-            e.isBlocking = false
+            if e.isBlocking then
+                e.isBlocking = false
+                e.wantBlock = nil
+            end
             e.wantMove = -dirToPlayer
             return
         end
