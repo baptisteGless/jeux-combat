@@ -137,10 +137,57 @@ end
 function Movement:update(dt)
     local p = self.player
 
+    -- addDebugLog("p.animation.isBBHing=" .. tostring(p.animation.isBBHing))
+    -- addDebugLog("p.animation.isBHHing=" .. tostring(p.animation.isBHHing))
+    if p.animation.isBBHing then
+        -- addDebugLog("p.bbhTimer=" .. tostring(p.bbhTimer))
+        p.bbhTimer = p.bbhTimer - dt
+        if p.bbhTimer <= 0 then
+            p.animation:endBBH()
+        end
+        return
+    end
+
+    if p.animation.isBHHing then
+        -- addDebugLog("p.bhhTimer=" .. tostring(p.bhhTimer))
+        p.bhhTimer = p.bhhTimer - dt
+        if p.bhhTimer <= 0 then
+            p.animation:endBHH()
+        end
+        return
+    end
+
+    -- addDebugLog("(p.isCrouching and p.isBlocking)=" .. tostring((p.isCrouching and p.isBlocking)))
+    if p.state and not p.isRolling and not p.animation.isBBHingand and not p.animation.isBHHing then
+        -- COUP BAS
+        if p.directionatk == "hitBas" then
+            -- bloqué SEULEMENT si accroupi + block
+            if not (p.isCrouching and p.isBlocking) then
+                p.bbhTimer = p.bbhDuration
+                p.isBlocking = false
+                p.isCrouching = false
+                p.state = false  
+                p.animation:startBBH()
+            end
+            return
+        end
+
+        -- COUP HAUT
+        if p.directionatk == "hitHaut" then
+            -- bloqué SEULEMENT si block debout
+            if not (p.isBlocking and not p.isCrouching) then
+                p.bhhTimer = p.bhhDuration
+                p.state = false  
+                p.animation:startBHH()
+            end
+            return
+        end
+    end
+
     -- -------------------------------
     -- Si un roll est demandé et que le player est libre
     -- -------------------------------
-    if p.rollRequested and not p:isBusy() and not p.isRolling then
+    if p.rollRequested and not p:isBusy() and not p.isRolling and not self.state then
         p.isRolling = true
         p.rollRequested = false
         p.rollTimer = p.rollDuration
@@ -191,7 +238,7 @@ function Movement:update(dt)
         end
     end
 
-    if p.bufferedAttack and not p:isBusy() then
+    if p.bufferedAttack and not p:isBusy() and not p.state then
         local k = p.bufferedAttack
         p.bufferedAttack = nil
 
@@ -356,6 +403,8 @@ function Movement:update(dt)
     end
 
     -- Gérer accroupissement
+    -- addDebugLog("p.directionatk == hitBas=" .. tostring(p.directionatk == "hitBas"))
+    -- addDebugLog("p.isCrouching=" .. tostring(p.isCrouching))
     if love.keyboard.isDown("down") and p.isOnGround and not p.isRolling then
         p.isCrouching = true
     else
@@ -392,14 +441,14 @@ function Movement:keypressed(key)
     -- addDebugLog("key=" .. tostring(key))
 
     if key == "up" then
-        if p.isOnGround and not p.isRolling and not p.isCrouching and not p.isBlocking then
+        if p.isOnGround and not p.isRolling and not p.isCrouching and not p.isBlocking and not p.state then
             Moveset.jump(p)
         end
         return
     end
 
     if key == "left" or key == "right" then
-        if p.isOnGround and not p.isRolling then
+        if p.isOnGround and not p.isRolling and not p.state then
             local rollDir = (key == "left") and -1 or 1
             if (rollDir == -1 and p:isAtLeftEdge()) or (rollDir == 1 and p:isAtRightEdge()) then
                 return
@@ -419,7 +468,7 @@ function Movement:keypressed(key)
     end
 
     -- Interdire les attaques en l'air
-    if not p.isOnGround or p.isRolling or p.isBlocking then
+    if not p.isOnGround or p.isRolling or p.isBlocking or p.state then
         return
     end
 
@@ -428,7 +477,7 @@ function Movement:keypressed(key)
     if p.isCrouching then
         if key == "y" then
             -- attaque bas-slash
-            if not p:isBusy() then
+            if not p:isBusy() and not p.state then
                 self:executeMove("basSlash")
             else
                 -- le buffer marche toujours si combat en cours
@@ -481,6 +530,8 @@ function Movement:keypressed(key)
     end
 
     local intendedMove = nil
+
+    -- addDebugLog("bestCombo=" .. tostring(bestCombo))
 
     if bestCombo then
         -- la touche correspond à l'étape ##tmpBuffer dans bestCombo

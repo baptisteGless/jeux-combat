@@ -307,8 +307,88 @@ function Animation:endRoll()
     self.player.rollDirection = 0
 end
 
+function Animation:startBBH()
+    self.isBBHing = true
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+    self.isShoping = false
+
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endBBH()
+    self.isBBHing = false
+    self.state = false 
+    self.currentFrame = 1
+end
+
+function Animation:startBHH()
+    self.isBHHing = true
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+    self.isShoping = false
+
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endBHH()
+    self.isBHHing = false
+    self.state = false 
+    self.currentFrame = 1
+end
+
 function Animation:update(dt)
     local p = self.player
+
+    if self.isBBHing then
+        self.frameTimer = self.frameTimer + dt
+
+        local bbhFrames = self.player.sprites.bbhFrames[self.player.side]
+        local frameTime = (self.player.bbhDuration / #bbhFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #bbhFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    if self.isBHHing then
+        self.frameTimer = self.frameTimer + dt
+
+        local bhhFrames = self.player.sprites.bhhFrames[self.player.side]
+        local frameTime = (self.player.bhhDuration / #bhhFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #bhhFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
 
     -- === Gestion big-slash ===
     if self.isBigSlashing then

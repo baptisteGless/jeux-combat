@@ -52,7 +52,13 @@ function love.update(dt)
     player:updateOrientation(enemy)
     enemy:updateOrientation(player)
     
+    local atkennemy = enemy:getAttackHitbox()
     local atk = player:getAttackHitbox()
+    if atkennemy and checkCollision(atkennemy, player) then
+        player.directionatk = atkennemy.type
+        player.state = atkennemy.strick 
+        player.hitTimer = 0
+    end
     if atk then
         enemy.directionatk = atk.type
     end

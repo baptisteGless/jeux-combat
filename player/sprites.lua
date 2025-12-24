@@ -206,6 +206,30 @@ function Sprites.new(player)
         }
     }
 
+    -- bad-bas-hit
+    self.bbhFrames = {
+        G = {
+            love.graphics.newImage("images/perso_images/bad-bas-hit/bbh1-G.png"),
+            love.graphics.newImage("images/perso_images/bad-bas-hit/bbh2-G.png"),
+        },
+        D = {
+            love.graphics.newImage("images/perso_images/bad-bas-hit/bbh1-D.png"),
+            love.graphics.newImage("images/perso_images/bad-bas-hit/bbh2-D.png"),
+        }
+    }
+
+    -- bad-haut-hit
+    self.bhhFrames = {
+        G = {
+            love.graphics.newImage("images/perso_images/bad-haut-hit/bhh1-G.png"),
+            love.graphics.newImage("images/perso_images/bad-haut-hit/bhh2-G.png"),
+        },
+        D = {
+            love.graphics.newImage("images/perso_images/bad-haut-hit/bhh1-D.png"),
+            love.graphics.newImage("images/perso_images/bad-haut-hit/bhh2-D.png"),
+        }
+    }
+
     return self
 end
 
@@ -218,6 +242,8 @@ function Sprites:getCurrentSprite()
         local idx = math.min(p.animation.currentFrame, #frames)
         return frames[idx]
     end
+    -- addDebugLog("p.animation.isBHHing=" .. tostring(p.animation.isBHHing))
+    -- addDebugLog("p.animation.isBBHing=" .. tostring(p.animation.isBBHing))
 
     if p.animation.isRolling then
         sprite = safeFrame(self.rollFrames[p.side])
@@ -252,6 +278,10 @@ function Sprites:getCurrentSprite()
         sprite = safeFrame(self.shopFrames[p.side])
     elseif p.animation.isPunching then
         sprite = safeFrame(self.punchFrames[p.side])
+    elseif p.animation.isBBHing then
+        sprite = safeFrame(self.bbhFrames[p.side])
+    elseif p.animation.isBHHing then
+        sprite = safeFrame(self.bhhFrames[p.side])
     elseif p.animation.isWalking then
         local frames = (p.animation.walkType=="forward") and p.walkForwardFrames[p.side] or p.walkBackwardFrames[p.side]
         sprite = safeFrame(frames)
@@ -269,12 +299,12 @@ end
 
 -- multipliers pour les frames du roll
 Sprites.rollScaleMultipliers = { 
-    0.7,  -- frame 1
-    0.6,  -- frame 2
-    0.6,  -- frame 3
-    0.6,  -- frame 4
-    0.6,  -- frame 5
-    0.8   -- frame 6
+    0.5,  -- frame 1
+    0.4,  -- frame 2
+    0.4,  -- frame 3
+    0.4,  -- frame 4
+    0.3,  -- frame 5
+    0.6   -- frame 6
 }
 
 function Sprites:draw()

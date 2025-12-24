@@ -167,6 +167,16 @@ function Player.new(x, y)
     self.bigSlashTimer = 0
     self.bigSlashDuration = 0.7 -- durée totale du big-slash (à ajuster)
 
+    -- état de hit
+    self.isBBHing = false
+    self.isBHHing = false
+    self.directionatk = "idle"
+    self.state = false      -- peut être "idle", "hitBas"
+    self.bbhTimer = 0
+    self.bbhDuration = 0.2  -- durée de l’animation du coup reçu
+    self.bhhTimer = 0
+    self.bhhDuration = 0.2  -- durée de l’animation du coup reçu
+
     -- Sous-modules
     self.movement = Movement.new(self)
     self.animation = Animation.new(self)

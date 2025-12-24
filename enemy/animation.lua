@@ -256,17 +256,17 @@ function Animation:startWalk(moveDir)
     self.walkType = isForward and "forward" or "backward"
 
     if not self.isWalking then
-         self.isBigSlashing = false
-        self.isHeavySlashing = false
-        self.ishit1ing = false
-        self.iskicking = false
-        self.iskneeing = false
-        self.isLowKicking = false
-        self.isLowSlashing = false
-        self.isPunching = false
-        self.isJumping = false
-        self.isRolling = false
-        self.isShoping = false
+        -- self.isBigSlashing = false
+        -- self.isHeavySlashing = false
+        -- self.ishit1ing = false
+        -- self.iskicking = false
+        -- self.iskneeing = false
+        -- self.isLowKicking = false
+        -- self.isLowSlashing = false
+        -- self.isPunching = false
+        -- self.isJumping = false
+        -- self.isRolling = false
+        -- self.isShoping = false
         self.isWalking = true
         self.currentFrame = 1
         self.frameTimer = 0

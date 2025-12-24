@@ -66,61 +66,61 @@ function Movement:executeMove(move)
     if e.isStunned then return false end
 
     if move == "punch" then
-        e.isPunching = true
+        -- e.isPunching = true
         e.punchTimer = e.punchDuration
         e.animation:startPunch()
         e.lastAttack = move
 
     elseif move == "lowSlash" then
-        e.isLowSlashing = true
+        -- e.isLowSlashing = true
         e.lowSlashTimer = e.lowSlashDuration
         e.animation:startLowSlash()
         e.lastAttack = move
 
     elseif move == "bigSlash" then
-        e.isBigSlashing = true
+        -- e.isBigSlashing = true
         e.bigSlashTimer = e.bigSlashDuration
         e.animation:startBigSlash()
         e.lastAttack = move
 
     elseif move == "lowKick" then
-        e.isLowKicking = true
+        -- e.isLowKicking = true
         e.lowKickTimer = e.lowKickDuration
         e.animation:startLowKick()
         e.lastAttack = move
 
     elseif move == "knee" then
-        e.iskneeing = true
+        -- e.iskneeing = true
         e.kneeTimer = e.kneeDuration
         e.animation:startknee()
         e.lastAttack = move
 
     elseif move == "heavySlash" then
-        e.isHeavySlashing = true
+        -- e.isHeavySlashing = true
         e.heavySlashTimer = e.heavySlashDuration
         e.animation:startHeavySlash()
         e.lastAttack = move
 
     elseif move == "hit1" then
-        e.ishit1ing = true
+        -- e.ishit1ing = true
         e.hit1Timer = e.hit1Duration
         e.animation:starthit1()
         e.lastAttack = move
 
     elseif move == "kick" then
-        e.iskicking = true
+        -- e.iskicking = true
         e.kickTimer = e.kickDuration
         e.animation:startkick()
         e.lastAttack = move
 
     elseif move == "basSlash" then
-        e.isBasSlashing = true
+        -- e.isBasSlashing = true
         e.basSlashTimer = e.basSlashDuration
         e.animation:startBasSlash()
         e.lastAttack = move
 
     elseif move == "shop" then
-        e.isShoping = true
+        -- e.isShoping = true
         e.shopTimer = e.shopDuration
         e.animation:startShop()
         e.lastAttack = move
@@ -148,53 +148,28 @@ function Movement:update(dt)
         return -- tant qu'on bloque on ne bouge pas
     end
     -- Gestion de l’animation du hit bas
-    -- Si on vient d'être frappé -> on initie le stun
     if (e.directionatk == "hitBas" or e.directionatk == "hitHaut") and not e.isStunned and e.isRolling == false and e.state then
-        
         e.isStunned = true
-
-        -- reset mouvements/attaques
-        e.moveQueue = {}
-        e.bufferedAttack = nil
-        e.bufferedCombo = nil
-        e.comboStep = 1
-        e.wantMove = nil
-        e.rollRequested = false
-        e.isRolling = false
-        e.isBlocking = false
-        e.isWalking = false
-        e.isBasSlashing = false
-        e.isShoping = false
-        e.isPunching = false
-        e.isLowSlashing = false
-        e.isLowKicking = false
-        e.iskneeing = false
-        e.iskicking = false
-        e.ishit1ing = false
-        e.isHeavySlashing = false
-        e.isBigSlashing = false
-        e.isCrouching = false
-        -- timer reset
-        e.hitTimer = 0
     end
 
     -- si on est stun -> mise à jour timer stun
     if e.isStunned then
         e.hitTimer = e.hitTimer + dt
+        e.moveQueue = {}
         e.rollRequested = false
-        e.isRolling = false
+        e.animation.isRolling = false
         e.isBlocking = false
         e.isWalking = false
-        e.isBasSlashing = false
-        e.isShoping = false
-        e.isPunching = false
-        e.isLowSlashing = false
-        e.isLowKicking = false
-        e.iskneeing = false
-        e.iskicking = false
-        e.ishit1ing = false
-        e.isHeavySlashing = false
-        e.isBigSlashing = false
+        e.animation.isBasSlashing = false
+        e.animation.isShoping = false
+        e.animation.isPunching = false
+        e.animation.isLowSlashing = false
+        e.animation.isLowKicking = false
+        e.animation.iskneeing = false
+        e.animation.iskicking = false
+        e.animation.ishit1ing = false
+        e.animation.isHeavySlashing = false
+        e.animation.isBigSlashing = false
         e.isCrouching = false
 
         if e.hitTimer >= e.hitDuration then
@@ -210,7 +185,10 @@ function Movement:update(dt)
     end
 
     -- Si accroupi -> bloquer seulement le déplacement et le saut
-    local canMove = not e.isCrouching
+    local canMove = not e.isCrouching and not e.isRolling and not e.animation.isPunching 
+        and not e.animation.isLowSlashing and not e.animation.isLowKicking and not e.animation.iskneeing and not e.animation.iskicking
+        and not e.animation.ishit1ing and not e.animation.isHeavySlashing and not e.animation.isBigSlashing 
+        and not e.animation.isBasSlashing and not e.animation.isShoping
     
     if canMove then
         -- déplacement AI si demandé
@@ -226,7 +204,7 @@ function Movement:update(dt)
             end
 
             e.x = nextX
-
+            -- addDebugLog("e:isBusy()=" .. tostring(e:isBusy()))
             if not e:isBusy() and not e.isRolling then
                 e.animation:startWalk(e.wantMove)
             end
@@ -245,18 +223,18 @@ function Movement:update(dt)
     -- -------------------------------
     -- Si un roll est demandé et que l'enemy est libre
     -- -------------------------------
+    -- addDebugLog("e.rollTimer=" .. tostring(e.rollTimer))
     if e.rollRequested and not e:isBusy() and not e.isRolling then
-        e.isRolling = true
         e.wantMove = nil
-        e.rollRequested = false
         e.rollTimer = e.rollDuration
         local backward = (e.rollDirection == -1 and e.side == "D") or (e.rollDirection == 1 and e.side == "G")
-        e.animation:startRoll(e.rollDuration, backward)
+        -- addDebugLog("backward=" .. tostring(backward))
         return
     end
 
     -- Roulade (déplacement pendant roulade)
     if e.isRolling then
+        e.animation:startRoll(e.rollDuration, backward)
         local nextX = e.x + e.rollDirection * e.rollSpeed * dt
         if nextX < 0 then nextX = 0 end
         if nextX + e.width > love.graphics.getWidth() then
@@ -266,6 +244,7 @@ function Movement:update(dt)
         -- mettre à jour le timer
         e.rollTimer = e.rollTimer - dt
         if e.rollTimer <= 0 then
+            addDebugLog("++++++ e.rollTimer=" .. tostring(e.rollTimer))
             e.isRolling = false
         end
         return
@@ -340,52 +319,47 @@ function Movement:update(dt)
     end
 
     -- === gestion des timers d'attaques (lock tant que l'attaque n'est pas terminée) ===
-    if e.isPunching then
+    if e.animation.isPunching then
         e.punchTimer = e.punchTimer - dt
         if e.punchTimer <= 0 then
-            e.isPunching = false
             e.animation:endPunch()
         end
         return
     end
 
-    if e.isLowSlashing then
+    if e.animation.isLowSlashing then
         e.lowSlashTimer = e.lowSlashTimer - dt
         if e.lowSlashTimer <= 0 then
-            e.isLowSlashing = false
             e.animation:endLowSlash()
         end
         return
     end
 
-    if e.isLowKicking then
+    if e.animation.isLowKicking then
         e.lowKickTimer = e.lowKickTimer - dt
         if e.lowKickTimer <= 0 then
-            e.isLowKicking = false
             e.animation:endLowKick()
         end
         return
     end
 
-    if e.iskneeing then
+    if e.animation.iskneeing then
         e.kneeTimer = e.kneeTimer - dt
         if e.kneeTimer <= 0 then
-            e.iskneeing = false
             e.animation:endknee()
         end
         return
     end
 
-    if e.iskicking then
+    if e.animation.iskicking then
         e.kickTimer = e.kickTimer - dt
         if e.kickTimer <= 0 then
-            e.iskicking = false
             e.animation:endkick()
         end
         return
     end
 
-    if e.ishit1ing then
+    if e.animation.ishit1ing then
         e.hit1Timer = e.hit1Timer - dt
         local ratio = e.hit1Timer / e.hit1Duration  -- entre 1 et 0
         local advanceSpeed = 250 * ratio           -- finit en douceur (250 = à ajuster)
@@ -400,22 +374,20 @@ function Movement:update(dt)
         e.x = nextX
 
         if e.hit1Timer <= 0 then
-            e.ishit1ing = false
             e.animation:endhit1()
         end
         return
     end
 
-    if e.isHeavySlashing then
+    if e.animation.isHeavySlashing then
         e.heavySlashTimer = e.heavySlashTimer - dt
         if e.heavySlashTimer <= 0 then
-            e.isHeavySlashing = false
             e.animation:endHeavySlash()
         end
         return
     end
 
-    if e.isBigSlashing then
+    if e.animation.isBigSlashing then
         e.bigSlashTimer = e.bigSlashTimer - dt
         local ratio = e.bigSlashTimer / e.bigSlashDuration
         local advanceSpeed = 250 * ratio   -- tu peux augmenter ici !
@@ -430,25 +402,22 @@ function Movement:update(dt)
         e.x = nextX
 
         if e.bigSlashTimer <= 0 then
-            e.isBigSlashing = false
             e.animation:endBigSlash()
         end
         return
     end
 
-    if e.isBasSlashing then
+    if e.animation.isBasSlashing then
         e.basSlashTimer = e.basSlashTimer - dt
         if e.basSlashTimer <= 0 then
-            e.isBasSlashing = false
             e.animation:endBasSlash()
         end
         return
     end
 
-    if e.isShoping then
+    if e.animation.isShoping then
         e.shopTimer = e.shopTimer - dt
         if e.shopTimer <= 0 then
-            e.isShoping = false
             e.animation:endShop()
         end
         return

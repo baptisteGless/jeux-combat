@@ -153,6 +153,159 @@ function Enemy.new(x, y, target)
     return self
 end
 
+function Enemy:getAttackHitbox()
+     -- On vérifie que l'animation est en bas slash ET sur la frame souhaitée
+    local anim = self.animation
+
+    if anim.isBasSlashing then
+        strick = false
+        if anim.currentFrame == 3 then
+            strick = true
+        end
+        local w = 60   -- largeur du coup
+        local h = 30   -- hauteur du coup
+        local x, y = self.x, self.y + self.height - h
+
+        if self.side == "D" then
+            x = x + self.width
+        else
+            x = x - w
+        end
+
+        return { x = x, y = y, width = w, height = h, type = "hitBas", strick = strick }
+    elseif anim.isLowSlashing then
+        strick = false
+        if anim.currentFrame == 2 then
+            strick = true
+        end
+        local w = 25   -- largeur du coup
+        local h = 30   -- hauteur du coup
+        local x, y = self.x, self.y + self.height - h
+
+        if self.side == "D" then
+            x = x + self.width
+        else
+            x = x - w
+        end
+
+        return { x = x, y = y, width = w, height = h, type = "hitBas", strick = strick }
+    elseif anim.isLowKicking then
+        strick = false
+        if anim.currentFrame == 2 then
+            strick = true
+        end
+        local w = 30   -- largeur du coup
+        local h = 30   -- hauteur du coup
+        local x, y = self.x, self.y + self.height - h
+
+        if self.side == "D" then
+            x = x + self.width
+        else
+            x = x - w
+        end
+
+        return { x = x, y = y, width = w, height = h, type = "hitBas", strick = strick }
+    elseif anim.ishit1ing then
+        strick = false
+        if anim.currentFrame == 2 then
+            strick = true
+        end
+        local w = 20   -- largeur du coup
+        local h = 30   -- hauteur du coup
+        local x, y = self.x, self.y + self.height - h
+
+        if self.side == "D" then
+            x = x + self.width
+        else
+            x = x - w
+        end
+
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick }
+    elseif anim.iskicking then
+        strick = false
+        if anim.currentFrame == 2 then
+            strick = true
+        end
+        local w = 60   -- largeur du coup
+        local h = 30   -- hauteur du coup
+        local x, y = self.x, self.y + self.height - h
+
+        if self.side == "D" then
+            x = x + self.width
+        else
+            x = x - w
+        end
+
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick }
+    elseif anim.isHeavySlashing then
+        strick = false
+        if anim.currentFrame == 3 then
+            strick = true
+        end
+        local w = 60   -- largeur du coup
+        local h = 30   -- hauteur du coup
+        local x, y = self.x, self.y + self.height - h
+
+        if self.side == "D" then
+            x = x + self.width
+        else
+            x = x - w
+        end
+
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick }
+    elseif anim.iskneeing then
+        strick = false
+        if anim.currentFrame == 2 then
+            strick = true
+        end
+        local w = 20   -- largeur du coup
+        local h = 30   -- hauteur du coup
+        local x, y = self.x, self.y + self.height - h
+
+        if self.side == "D" then
+            x = x + self.width
+        else
+            x = x - w
+        end
+
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick }
+    elseif anim.isBigSlashing then
+        strick = false
+        if anim.currentFrame == 4 or anim.currentFrame == 5 then
+            strick = true
+        end
+        local w = 60   -- largeur du coup
+        local h = 30   -- hauteur du coup
+        local x, y = self.x, self.y + self.height - h
+
+        if self.side == "D" then
+            x = x + self.width
+        else
+            x = x - w
+        end
+
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick }
+    elseif anim.isPunching then
+        strick = false
+        if anim.currentFrame == 2 then
+            strick = true
+        end
+        local w = 20   -- largeur du coup
+        local h = 30   -- hauteur du coup
+        local x, y = self.x, self.y + self.height - h
+
+        if self.side == "D" then
+            x = x + self.width
+        else
+            x = x - w
+        end
+
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick }
+    end
+
+    return nil
+end
+
 function Enemy:isBusy()
     return self.isPunching or self.isLowSlashing or self.isLowKicking or
            self.iskneeing or self.iskicking or self.ishit1ing or

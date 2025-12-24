@@ -311,12 +311,12 @@ end
 
 -- multipliers pour les frames du roll
 Sprites.rollScaleMultipliers = { 
-    0.7,  -- frame 1
-    0.6,  -- frame 2
-    0.6,  -- frame 3
-    0.6,  -- frame 4
-    0.6,  -- frame 5
-    0.8   -- frame 6
+    0.5,  -- frame 1
+    0.4,  -- frame 2
+    0.4,  -- frame 3
+    0.4,  -- frame 4
+    0.3,  -- frame 5
+    0.6   -- frame 6
 }
 
 function Sprites:draw()

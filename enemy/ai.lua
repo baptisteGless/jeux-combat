@@ -145,7 +145,7 @@ function AI:update(dt)
     -- local dist = distance(e, p)
     -- local dirToPlayer = (p.x > e.x) and 1 or -1
 
-    if e.directionatk == "hitHaut" and dist < 110 and math.random() < 0.10 then
+    if e.directionatk == "hitHaut" and dist < 110 and math.random() < 0.30 and not e.isStunned and not e.state then
         -- addDebugLog("BLOCK HAUT")
         e.isCrouching = false
         e.wantBlock = "haut"
@@ -153,7 +153,7 @@ function AI:update(dt)
         e.blockType = e.wantBlock
         e.wantMove = nil
         return
-    elseif e.directionatk == "hitBas" and dist < 110 and math.random() < 0.10 then  --and math.random() < 0.95
+    elseif e.directionatk == "hitBas" and dist < 110 and math.random() < 0.30 and not e.isStunned and not e.state then  --and math.random() < 0.95
         -- addDebugLog("BLOCK BAS")
         e.isCrouching = true
         e.wantBlock = "bas"
@@ -166,7 +166,7 @@ function AI:update(dt)
     -- si trop proche -> ROLL à 70% de chance 
     local proba = math.random()
     if (e.directionatk == "hitHaut" or e.directionatk == "hitBas") and dist < 110 and proba < 0.7 and not e.isStunned and not e.state then
-        if proba < 0.4 then 
+        if proba < 0.5 then 
             -- direction naturelle = s'éloigner du joueur
             local rollDir = -dirToPlayer
 
@@ -202,7 +202,7 @@ function AI:update(dt)
             -----------------------------------------------------------
             -- Appliquer roulade finale
             -----------------------------------------------------------
-            addDebugLog("---hit detecté---")
+            -- addDebugLog("---hit detecté---")
             e.isCrouching = false
             e.wantBlock = nil
             e.isBlocking = false
@@ -236,9 +236,11 @@ function AI:update(dt)
     -- ===============================
     -- ATTAQUE SI À BONNE DISTANCE
     -- ===============================
+    -- addDebugLog("self.attackCooldown=" .. tostring(self.attackCooldown))
     if dist < 100 and not e:isBusy() and self.attackCooldown <= 0 then
         e.isCrouching = false
         e.wantBlock = nil
+        e.wantMove = nil
         e.isBlocking = false
         local attackID = self:chooseAttack(dist)
 
@@ -246,7 +248,7 @@ function AI:update(dt)
             e.movement:attackList(attackID)
 
             -- cooldown intelligent
-            self.attackCooldown = 0.45 + math.random() * 0.25
+            self.attackCooldown = 0.05 + math.random() * 0.00
             -- pause seulement APRES attaque
             -- if math.random() < self.pauseChance then
             --     self.pauseTimer = math.random(self.pauseMin, self.pauseMax)
@@ -268,7 +270,7 @@ function AI:update(dt)
         return
     end
 
-    if dist < 70 and math.random() < 0.15 then
+    if dist < 70 and math.random() < 0.15 and not e:isBusy() then
         -- CHANCE DE PAUSE
         -- if self:canPause(dist) and math.random() < self.pauseChance then
         --     self.pauseTimer = math.random(self.pauseMin, self.pauseMax)
@@ -282,38 +284,6 @@ function AI:update(dt)
             return
         end
     end
-    -- if dist < 10 then
-    --     -- CHANCE DE PAUSE
-    --     -- if self:canPause(dist) and math.random() < self.pauseChance then
-    --     --     self.pauseTimer = math.random(self.pauseMin, self.pauseMax)
-    --     --     return
-    --     -- end
-    --     if not eAtRightWall or not eAtLeftWall then
-    --         e.isCrouching = false
-    --         e.wantBlock = nil
-    --         e.isBlocking = false
-    --         e.wantMove = -dirToPlayer
-    --         return
-    --     elseif math.random() < 0.25 then
-    --         e.rollRequested = true 
-    --         e.rollDirection = rollDir 
-    --         return
-    --     end
-    -- end
-    -- ===============================
-    -- MICRO-AJUSTEMENT / FEINTE
-    -- ===============================
-    -- if math.random() < 0.25 then
-    --     -- CHANCE DE PAUSE
-    --     if self:canPause(dist) and math.random() < self.pauseChance then
-    --         self.pauseTimer = math.random(self.pauseMin, self.pauseMax)
-    --         return
-    --     end
-    --     e.isCrouching = false
-    --     e.wantBlock = nil
-    --     e.isBlocking = false
-    --     e.wantMove = -dirToPlayer
-    -- end
 end
 
 return AI
