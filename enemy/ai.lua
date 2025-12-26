@@ -108,6 +108,14 @@ function AI:update(dt)
     local e = self.enemy
     local p = self.target
 
+    if e.isGettingUp or e.thrown then
+        return
+    end
+
+    if e.thrown or e.isStunned or e.isRolling then
+        return
+    end
+
     if e.isStunned or e.animation.isBBHing or e.animation.isBHHing or e.thrown then
         return
     end
@@ -157,34 +165,37 @@ function AI:update(dt)
 
     -- local dist = distance(e, p)
     -- local dirToPlayer = (p.x > e.x) and 1 or -1
-
-    if e.directionatk == "hitHaut" and dist < 110 and math.random() < 0.30 and not e.isStunned and not e.state then
-        -- addDebugLog("BLOCK HAUT")
+    local proba = math.random()
+    if e.directionatk == "hitHaut" and dist < 110 and proba < 0.50 and not e.isStunned and not e.state then
+        addDebugLog("BLOCK HAUT")
         e.isCrouching = false
         e.wantBlock = "haut"
         if e.isBlocking then
             e.isBlocking = false
             e.wantBlock = nil
+        else
+            e.isBlocking = true
         end
         e.blockType = e.wantBlock
         return
-    elseif e.directionatk == "hitBas" and dist < 110 and math.random() < 0.30 and not e.isStunned and not e.state then  --and math.random() < 0.95
-        -- addDebugLog("BLOCK BAS")
+    elseif e.directionatk == "hitBas" and dist < 110 and proba < 0.50 and not e.isStunned and not e.state then  --and math.random() < 0.95
+        addDebugLog("BLOCK BAS")
         e.isCrouching = true
         e.wantBlock = "bas"
         if e.isBlocking then
             e.isBlocking = false
             e.wantBlock = nil
+        else
+            e.isBlocking = true
         end
         e.blockType = e.wantBlock
         return
     end
 
     -- si trop proche -> ROLL à 70% de chance 
-    local proba = math.random()
-    if e.hitJustReceived and dist < 110 and proba < 0.7 and not e.isStunned and not e.state then
-        addDebugLog("e.directionatk =" .. tostring(e.directionatk ))
-        if proba < 0.5 then 
+    if e.hitJustReceived and dist < 110 and proba < 0.40 and not e.isStunned and not e.state then
+        -- addDebugLog("e.directionatk =" .. tostring(e.directionatk ))
+        if proba < 0.20 then 
             -- direction naturelle = s'éloigner du joueur
             local rollDir = -dirToPlayer
 

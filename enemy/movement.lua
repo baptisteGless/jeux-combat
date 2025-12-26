@@ -4,7 +4,7 @@ local Moveset = require("moveset")
 local Movement = {}
 Movement.__index = Movement
 
-function Movement.new(enemy)
+function Movement.new(enemy,target)
     local self = setmetatable({}, Movement)
     self.enemy = enemy
     return self
@@ -138,21 +138,57 @@ function Movement:update(dt)
     local e = self.enemy
     -- addDebugLog("e.compteHit" .. tostring(e.compteHit))
 
+    if e.isGettingUp then
+        e.guvTimer = e.guvTimer - dt
+
+        if e.guvTimer <= 0 then
+            e.isGettingUp = false
+            e.animation:endguv()
+
+            e.state = false
+            e.directionatk = "idle"
+            e.isStunned = false
+            e.wantMove = 0
+            e.rollRequested = false
+        end
+
+        return
+    end
+
     if e.thrown then
         e.thrownTimer = e.thrownTimer - dt
 
-        local push = 250 * dt
-        if e.side == "G" then
-            e.x = math.max(0, e.x - push)
-        else
-            e.x = math.min(love.graphics.getWidth() - e.width, e.x + push)
+        -- déplacement
+        local dx = e.throwDirection * e.throwVelocity * dt
+        e.throwVelocity = e.throwVelocity * 0.92  -- friction sol
+
+        local nextX = e.x + dx
+
+        if nextX < 0 then
+            nextX = 0
+            e.throwVelocity = 0
+        elseif nextX + e.width > love.graphics.getWidth() then
+            nextX = love.graphics.getWidth() - e.width
+            e.throwVelocity = 0
         end
 
+        e.x = nextX
+
+        -- AUCUNE AUTRE ACTION
         if e.thrownTimer <= 0 then
             e.thrown = false
+            e.isStunned = false
+            e.throwVelocity = 0
+            e.isGettingUp = true
+            e.guvTimer = e.guvDuration
+            e.animation:startguv()
         end
 
-        return -- aucune autre action possible
+        return
+    end
+
+    if enemy.thrown or enemy.isGettingUp then
+        return
     end
 
     -- Si blocage -> pas de mouvement ni saut
@@ -172,7 +208,7 @@ function Movement:update(dt)
     if e.animation.isBBHing then
         e.bbhTimer = e.bbhTimer - dt
         if e.bbhTimer <= 0 then
-            addDebugLog("------")
+            -- addDebugLog("------")
             e.isStunned = false
             e.directionatk = "idle"
             e.hitTimer = 0
@@ -185,7 +221,7 @@ function Movement:update(dt)
     if e.animation.isBHHing then
         e.bhhTimer = e.bhhTimer - dt
         if e.bhhTimer <= 0 then
-            addDebugLog("++++++")
+            -- addDebugLog("++++++")
             e.isStunned = false
             e.directionatk = "idle"
             e.hitTimer = 0
@@ -202,11 +238,36 @@ function Movement:update(dt)
             e.fall = false
             e.thrown = true
             e.thrownTimer = e.thrownDuration
-            e.compteHit = 0
 
-            e.isStunned = false
+            -- direction opposée au joueur
+            local p = e.target
+            e.throwDirection = (e.x < p.x) and -1 or 1
+
+            -- distance variable selon position écran
+            local screenW = love.graphics.getWidth()
+            local distToEdge
+
+            if e.throwDirection == -1 then
+                distToEdge = e.x
+            else
+                distToEdge = screenW - (e.x + e.width)
+            end
+
+            -- puissance proportionnelle à l’espace dispo
+            local maxThrow = 620
+            local minThrow = 220
+            local factor = math.min(distToEdge / 200, 1)
+
+            e.throwVelocity = minThrow + (maxThrow - minThrow) * factor
+
+            -- hard lock
+            e.isStunned = true
             e.state = false
             e.directionatk = "idle"
+            e.moveQueue = {}
+            e.rollRequested = false
+            e.wantMove = 0
+
             return
         end
 

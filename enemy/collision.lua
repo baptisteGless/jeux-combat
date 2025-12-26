@@ -19,6 +19,11 @@ end
 
 function Collision:handle(other, dt)
     local e = self.enemy
+    
+    if e.thrown or e.isGettingUp then
+        return
+    end
+
     if not Collision.checkCollision(e, other) then
         e.isBlocked = false
         return

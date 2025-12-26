@@ -157,8 +157,18 @@ function Enemy.new(x, y, target)
     self.limiteHit = 4
     self.hitLock = false  
 
+    self.throwVelocity = 0
+    self.throwDirection = 0
+
+    self.target = target 
+
+    -- état de get-up-v
+    self.isGettingUp = false
+    self.guvTimer = 0
+    self.guvDuration = 0.2 -- durée totale du big-slash (à ajuster)
+
     -- Sous-modules
-    self.movement = Movement.new(self)
+    self.movement = Movement.new(self,target)
     self.animation = Animation.new(self)
     self.sprites = Sprites.new(self)
     self.collision = Collision.new(self)

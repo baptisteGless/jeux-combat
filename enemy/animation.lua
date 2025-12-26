@@ -256,17 +256,6 @@ function Animation:startWalk(moveDir)
     self.walkType = isForward and "forward" or "backward"
 
     if not self.isWalking then
-        -- self.isBigSlashing = false
-        -- self.isHeavySlashing = false
-        -- self.ishit1ing = false
-        -- self.iskicking = false
-        -- self.iskneeing = false
-        -- self.isLowKicking = false
-        -- self.isLowSlashing = false
-        -- self.isPunching = false
-        -- self.isJumping = false
-        -- self.isRolling = false
-        -- self.isShoping = false
         self.isWalking = true
         self.currentFrame = 1
         self.frameTimer = 0
@@ -320,6 +309,32 @@ function Animation:endbbh()
     self.currentFrame = 1
 end
 
+function Animation:startguv()
+    self.isguving = true
+    self.isBHHing = false
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+    self.isShoping = false
+
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endguv()
+    self.isguving = false
+    self.currentFrame = 1
+end
+
 function Animation:startbhh()
     self.isBHHing = true
     self.isBigSlashing = false
@@ -370,6 +385,21 @@ end
 
 function Animation:update(dt)
     local e = self.enemy
+
+    -- == Gestion guv ==
+    if self.isguving then
+        self.frameTimer = self.frameTimer + dt
+
+        local guvFrames = self.enemy.sprites.guv[self.enemy.side]
+        local frameTime = (self.enemy.guvDuration / #guvFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #guvFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
 
     -- == Gestion chute ==
     if e.thrown then
