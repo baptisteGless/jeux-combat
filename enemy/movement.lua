@@ -138,6 +138,34 @@ function Movement:update(dt)
     local e = self.enemy
     -- addDebugLog("e.compteHit" .. tostring(e.compteHit))
 
+    -- if e.isInShopSequence then
+    --     return
+    -- end
+    -- addDebugLog("e.isShopReactioning=" .. tostring(e.isShopReactioning))
+    if e.isShopReactioning then
+        e.shopReactionTimer = e.shopReactionTimer - dt
+
+        if e.shopReactionTimer <= 0 then
+            e.animation:endSR()
+            e.isShopReactioning = false
+            e.isInShopSequence = false
+
+            -- RESTAURATION POSITION
+            if e._shopPrevX then
+                e.x = e._shopPrevX
+                e._shopPrevX = nil
+            end
+
+            -- ENCHAÎNER AVEC FALL
+            e.fall = true
+            e.state = true
+            e.compteHit = e.limiteHit
+        end
+
+        return
+    end
+
+
     if e.isGettingUp then
         e.guvTimer = e.guvTimer - dt
 
@@ -230,7 +258,10 @@ function Movement:update(dt)
         end
         return
     end
-
+    -- addDebugLog("e.state=" .. tostring(e.state))
+    -- addDebugLog("e.isRolling=" .. tostring(e.isRolling))
+    -- addDebugLog("e.animation.isBBHing=" .. tostring(e.animation.isBBHing))
+    -- addDebugLog("e.animation.isBHHing=" .. tostring(e.animation.isBHHing))
     if e.state and not e.isRolling and not e.animation.isBBHing and not e.animation.isBHHing then
         
         -- if e.compteHit >= e.limiteHit and not e.thrown then
@@ -402,7 +433,7 @@ function Movement:update(dt)
         -- mettre à jour le timer
         e.rollTimer = e.rollTimer - dt
         if e.rollTimer <= 0 then
-            addDebugLog("++++++ e.rollTimer=" .. tostring(e.rollTimer))
+            -- addDebugLog("++++++ e.rollTimer=" .. tostring(e.rollTimer))
             e.isRolling = false
         end
         return

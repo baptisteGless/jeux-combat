@@ -19,6 +19,10 @@ end
 
 function Collision:handle(other, dt)
     local e = self.enemy
+
+    if e.isInShopSequence or other.isInShopSequence then
+        return
+    end
     
     if e.thrown or e.isGettingUp then
         return

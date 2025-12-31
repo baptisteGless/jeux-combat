@@ -41,6 +41,7 @@ function love.load()
 
     -- Créer l’ennemi (autre Player pour l’instant)
     enemy = Enemy.new(screenWidth - 400, screenHeight - 150, player)
+    player.target = enemy
 end
 
 function love.update(dt)

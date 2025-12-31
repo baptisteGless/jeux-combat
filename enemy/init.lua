@@ -24,6 +24,12 @@ function Enemy.new(x, y, target)
     local scale = math.min(scaleX, scaleY) -- garder proportions correctes
 
     self.isCrouching = false
+
+    -- état du shop-reaction
+    self.isShopReactioning = false
+    self.shopReactionTimer = 0
+    self.shopReactionDuration = 1.2 -- durée totale du shop (à ajuster)
+
     -- blockage
     self.isBlocking = false
     self.blockTimer = 0

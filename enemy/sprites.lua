@@ -5,6 +5,7 @@ Sprites.__index = Sprites
 function Sprites.new(enemy)
     local self = setmetatable({}, Sprites)
     self.enemy = enemy
+    self.logoID = love.graphics.newImage("images/logo_id/romain.png")
     self.poseG = love.graphics.newImage("images/perso_images/pose-G.png")
     self.poseD = love.graphics.newImage("images/perso_images/pose-D.png")
     self.poseBasG = love.graphics.newImage("images/perso_images/poseBAS-G.png")
@@ -191,18 +192,12 @@ function Sprites.new(enemy)
             love.graphics.newImage("images/perso_images/shop/shop2-G.png"),
             love.graphics.newImage("images/perso_images/shop/shop3-G.png"),
             love.graphics.newImage("images/perso_images/shop/shop4-G.png"),
-            love.graphics.newImage("images/perso_images/shop/shop5-G.png"),
-            love.graphics.newImage("images/perso_images/shop/shop6-G.png"),
-            love.graphics.newImage("images/perso_images/shop/shop7-G.png"),
         },
         D = {
             love.graphics.newImage("images/perso_images/shop/shop1-D.png"),
             love.graphics.newImage("images/perso_images/shop/shop2-D.png"),
             love.graphics.newImage("images/perso_images/shop/shop3-D.png"),
             love.graphics.newImage("images/perso_images/shop/shop4-D.png"),
-            love.graphics.newImage("images/perso_images/shop/shop5-D.png"),
-            love.graphics.newImage("images/perso_images/shop/shop6-D.png"),
-            love.graphics.newImage("images/perso_images/shop/shop7-D.png"),
         }
     }
 
@@ -268,6 +263,42 @@ function Sprites.new(enemy)
         }
     }
 
+    -- shop-reaction
+    self.shopReaction = {
+        G = {
+            love.graphics.newImage("images/perso_images/shop-reaction/sr1-G.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr2-G.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr3-G.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr4-G.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr5-G.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr6-G.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr7-G.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr8-G.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr9-G.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr10-G.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr11-G.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr12-G.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr13-G.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr14-G.png"),
+        },
+        D = {
+            love.graphics.newImage("images/perso_images/shop-reaction/sr1-D.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr2-D.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr3-D.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr4-D.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr5-D.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr6-D.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr7-D.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr8-D.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr9-D.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr10-D.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr11-D.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr12-D.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr13-D.png"),
+            love.graphics.newImage("images/perso_images/shop-reaction/sr14-D.png"),
+        }
+    }
+
     return self
 end
 
@@ -304,6 +335,14 @@ function Sprites:getCurrentSprite()
             local frames = self.rollFrames[e.side]
             sprite = frames[#frames - e.animation.currentFrame + 1]
         end
+    elseif e.animation.isShopReactioning then
+        sprite = safeFrame(self.shopReaction[e.side])
+        local img = safeFrame(self.shopReaction[e.side])
+        return {
+            img = img,
+            scaleX = e.scaleX or 1,
+            scaleY = e.scaleY or 1
+        }
     elseif e.animation.isJumping then
         sprite = safeFrame(e.jumpFrames and e.jumpFrames[e.side])
     elseif e.animation.isBasSlashing then
@@ -353,6 +392,24 @@ Sprites.rollScaleMultipliers = {
     0.6   -- frame 6
 }
 
+-- multipliers pour les frames du roll
+Sprites.shopReactScaleMultipliers = { 
+    0.12,  -- frame 1
+    0.12,  -- frame 2
+    0.12,  -- frame 3
+    0.12,  -- frame 4
+    0.12,  -- frame 5
+    0.12,  -- frame 6
+    0.12,  -- frame 7
+    0.12,  -- frame 8
+    0.12,  -- frame 9
+    0.12,  -- frame 10
+    0.12,  -- frame 11
+    0.12,  -- frame 12
+    0.12,  -- frame 13
+    0.12   -- frame 14
+}
+
 function Sprites:draw()
     local e = self.enemy
     local sprite = self:getCurrentSprite()
@@ -374,6 +431,12 @@ function Sprites:draw()
             scaleX = scaleX * rollMultiplier
             scaleY = scaleY * rollMultiplier
         end
+        if e.animation.isShopReactioning then
+            local frame = e.animation.currentFrame or 1
+            local shopMultiplier = Sprites.shopReactScaleMultipliers[frame] or 1
+            scaleX = scaleX * shopMultiplier
+            scaleY = scaleY * shopMultiplier
+        end
         -- appliquer scale pour accroupissement
         scaleY = scaleY * crouchScale * shopScale
         local w, h = img:getWidth(), img:getHeight()
@@ -383,6 +446,28 @@ function Sprites:draw()
         local originY = h * crouchScale * shopScale
 
         love.graphics.draw(img, drawX, drawY, 0, scaleX, scaleY, originX, originY)
+        -- === LOGO AU-DESSUS DE L'ENEMY ===
+        if self.logoID then
+            local logo = self.logoID
+            local lw, lh = logo:getWidth(), logo:getHeight()
+
+            local logoScale = 0.4
+            local offsetY = 20
+
+            local logoX = e.x + e.width / 2
+            local logoY = e.y - offsetY
+
+            love.graphics.draw(
+                logo,
+                logoX,
+                logoY,
+                0,
+                logoScale,
+                logoScale,
+                lw / 2,
+                lh
+            )
+        end
     else
         -- ancien comportement (pour les poses fixes qui sont juste des images)
         local w, h = sprite:getWidth(), sprite:getHeight()
@@ -393,6 +478,28 @@ function Sprites:draw()
         local originY = h 
 
         love.graphics.draw(sprite, drawX, drawY, 0, scale, scale, originX, originY)
+         -- === LOGO AU-DESSUS DE L'ENEMY ===
+        if self.logoID then
+            local logo = self.logoID
+            local lw, lh = logo:getWidth(), logo:getHeight()
+
+            local logoScale = 0.4
+            local offsetY = 20
+
+            local logoX = e.x + e.width / 2
+            local logoY = e.y - offsetY
+
+            love.graphics.draw(
+                logo,
+                logoX,
+                logoY,
+                0,
+                logoScale,
+                logoScale,
+                lw / 2,
+                lh
+            )
+        end
     end
 end
 

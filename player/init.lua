@@ -7,7 +7,7 @@ local Collision = require("player.collision")
 local Player = {}
 Player.__index = Player
 
-function Player.new(x, y)
+function Player.new(x, y, target)
     local self = setmetatable({}, Player)
 
     -- Récupérer dimensions actuelles de l’écran
@@ -122,10 +122,21 @@ function Player.new(x, y)
     self.basSlashTimer = 0
     self.basSlashDuration = 0.35 -- durée totale du bas-slash (à ajuster)
 
+    -- état du shop-success
+    self.isShopSuccessing = false
+    self.shopSuccessTimer = 0
+    self.shopSuccessDuration = 1.2 -- durée totale du shop (à ajuster)
+
+    -- état du shop-fail
+    self.isShopFailing = false
+    self.shopFailTimer = 0
+    self.shopFailDuration = 0.2 -- durée totale du shop (à ajuster)
+
     -- état du shop
+    self.shopWillSucceed = false
     self.isShoping = false
     self.shopTimer = 0
-    self.shopDuration = 0.7 -- durée totale du punch (à ajuster)
+    self.shopDuration = 0.5 -- durée totale du shop (à ajuster)
 
     -- état du punch
     self.isPunching = false
@@ -176,6 +187,8 @@ function Player.new(x, y)
     self.bbhDuration = 0.2  -- durée de l’animation du coup reçu
     self.bhhTimer = 0
     self.bhhDuration = 0.2  -- durée de l’animation du coup reçu
+
+    self.target = target 
 
     -- Sous-modules
     self.movement = Movement.new(self)
@@ -346,7 +359,7 @@ function Player:isBusy()
     return self.isPunching or self.isLowSlashing or self.isLowKicking or
            self.iskneeing or self.iskicking or self.ishit1ing or
            self.isHeavySlashing or self.isBigSlashing or
-           self.isBasSlashing or self.isShoping
+           self.isBasSlashing or self.isShoping or self.isShopSuccessing or self.isShopFailing
 end
 
 function Player:update(dt, other)

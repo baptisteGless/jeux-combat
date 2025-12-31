@@ -10,6 +10,45 @@ function Movement.new(player)
     return self
 end
 
+function Movement:cancelShop()
+    local p = self.player
+    local e = p.target
+
+    -- Si pas en shop → rien à faire
+    if not (p.isShoping or p.isShopSuccessing) then
+        return
+    end
+
+    -- STOP timers & états
+    p.isShoping = false
+    p.isShopSuccessing = false
+    p.isShopFailing = false
+    p.isInShopSequence = false
+
+    -- STOP animations
+    p.animation:endShop()
+    p.animation:endShopSuccess()
+    p.animation:endShopFail()
+
+    -- RESTAURER POSITIONS
+    if p._shopPrevX then
+        p.x = p._shopPrevX
+        p._shopPrevX = nil
+    end
+
+    if e and e._shopPrevX then
+        e.x = e._shopPrevX
+        e._shopPrevX = nil
+    end
+
+    -- RESET ENEMY
+    if e then
+        e.isShopReactioning = false
+        e.isInShopSequence = false
+        e.animation:endSR()
+    end
+end
+
 -- Exécute un move (doit être appelé uniquement quand le player n'est pas busy)
 function Movement:executeMove(move)
     local p = self.player
@@ -70,9 +109,23 @@ function Movement:executeMove(move)
 
     elseif move == "shop" then
         p.isShoping = true
+        p.isInShopSequence = true
         p.shopTimer = p.shopDuration
         p.animation:startShop()
         p.lastAttack = move
+
+        -- IMPORTANT : vérifier la distance ici
+        local e = p.target
+        local dist = math.abs((p.x + p.width/2) - (e.x + e.width/2))
+
+        if dist < 140 and not e.isInShopSequence and not e.thrown then
+            -- SHOP RÉUSSIE
+            p.shopWillSucceed = true
+        else
+            -- addDebugLog(" SHOP RATÉE ")
+            -- SHOP RATÉE
+            p.shopWillSucceed = false
+        end
 
     else
         -- move inconnu
@@ -137,8 +190,6 @@ end
 function Movement:update(dt)
     local p = self.player
 
-    -- addDebugLog("p.animation.isBBHing=" .. tostring(p.animation.isBBHing))
-    -- addDebugLog("p.animation.isBHHing=" .. tostring(p.animation.isBHHing))
     if p.animation.isBBHing then
         -- addDebugLog("p.bbhTimer=" .. tostring(p.bbhTimer))
         p.bbhTimer = p.bbhTimer - dt
@@ -163,6 +214,7 @@ function Movement:update(dt)
         if p.directionatk == "hitBas" then
             -- bloqué SEULEMENT si accroupi + block
             if not (p.isCrouching and p.isBlocking) then
+                self:cancelShop()
                 p.bbhTimer = p.bbhDuration
                 p.isBlocking = false
                 p.isCrouching = false
@@ -176,12 +228,85 @@ function Movement:update(dt)
         if p.directionatk == "hitHaut" then
             -- bloqué SEULEMENT si block debout
             if not (p.isBlocking and not p.isCrouching) then
+                self:cancelShop()
                 p.bhhTimer = p.bhhDuration
                 p.state = false  
                 p.animation:startBHH()
             end
             return
         end
+    end
+
+    if p.isShoping then
+        p.shopTimer = p.shopTimer - dt
+        if p.shopTimer <= 0 then
+            p.isShoping = false
+            p.animation:endShop()
+            if p.shopWillSucceed then
+                local e = p.target
+                local overlap = 40 -- PLUS PETIT = PLUS COLLÉS
+                -- Sauvegarde positions AVANT shop
+                p._shopPrevX = p.x
+                e._shopPrevX = e.x
+
+                -- Coller enemy au player
+                if p.side == "D" then
+                    e.x = p.x + p.width - overlap
+                    -- e.x = p.x
+                    e.side = "G"
+                else
+                    e.x = p.x - e.width + overlap
+                    -- e.x = p.x
+                    e.side = "D"
+                end
+                -- DÉMARRER SHOP SUCCESS
+                p.isShopSuccessing = true
+                p.shopSuccessTimer = p.shopSuccessDuration
+                p.animation:startShopSuccess()
+
+                -- ENEMY ENTRE EN SHOP REACTION
+                e.isInShopSequence = true
+                e.isShopReactioning = true
+                e.shopReactionTimer = e.shopReactionDuration
+                e.animation:startSR()
+            else
+                -- SHOP FAIL
+                p.isShopFailing = true
+                p.shopFailTimer = p.shopFailDuration
+                p.animation:startShopFail()
+            end
+        end
+
+        return
+    end
+
+    if p.isShopSuccessing then
+        p.shopSuccessTimer = p.shopSuccessTimer - dt
+
+        if p.shopSuccessTimer <= 0 then
+            p.isShopSuccessing = false
+            p.animation:endShopSuccess()
+            p.isInShopSequence = false
+            -- RESTAURATION PLAYER
+            if p._shopPrevX then
+                p.x = p._shopPrevX
+                p._shopPrevX = nil
+            end
+        end
+
+        return
+    end
+
+    if p.isShopFailing then
+        p.shopFailTimer = p.shopFailTimer - dt
+
+        if p.shopFailTimer <= 0 then
+            p.isShopFailing = false
+            p.animation:endShopFail()
+            p.isInShopSequence = false
+        end
+
+        return
     end
 
     -- -------------------------------
@@ -393,26 +518,17 @@ function Movement:update(dt)
         return
     end
 
-    if p.isShoping then
-        p.shopTimer = p.shopTimer - dt
-        if p.shopTimer <= 0 then
-            p.isShoping = false
-            p.animation:endShop()
-        end
-        return
-    end
-
     -- Gérer accroupissement
     -- addDebugLog("p.directionatk == hitBas=" .. tostring(p.directionatk == "hitBas"))
     -- addDebugLog("p.isCrouching=" .. tostring(p.isCrouching))
-    if love.keyboard.isDown("down") and p.isOnGround and not p.isRolling then
+    if love.keyboard.isDown("down") and p.isOnGround and not p.isRolling and not p.isShopSuccessing and not p.isShopFailing then
         p.isCrouching = true
     else
         p.isCrouching = false
     end
 
     -- Gestion blocage (touche F)
-    if love.keyboard.isDown("f") then
+    if love.keyboard.isDown("f") and not p.isShopSuccessing and not p.isShopFailing then
         if not p.animation.isJumping then
             p.isBlocking = true
         end
@@ -440,15 +556,19 @@ function Movement:keypressed(key)
     local t = love.timer.getTime()
     -- addDebugLog("key=" .. tostring(key))
 
+    if p.isShopSuccessing or p.isShopFailing then
+        return
+    end
+
     if key == "up" then
-        if p.isOnGround and not p.isRolling and not p.isCrouching and not p.isBlocking and not p.state then
+        if p.isOnGround and not p.isRolling and not p.isCrouching and not p.isBlocking and not p.state and not p.isShopSuccessing and not p.isShopFailing then
             Moveset.jump(p)
         end
         return
     end
 
     if key == "left" or key == "right" then
-        if p.isOnGround and not p.isRolling and not p.state then
+        if p.isOnGround and not p.isRolling and not p.state and not p.isShopSuccessing and not p.isShopFailing then
             local rollDir = (key == "left") and -1 or 1
             if (rollDir == -1 and p:isAtLeftEdge()) or (rollDir == 1 and p:isAtRightEdge()) then
                 return

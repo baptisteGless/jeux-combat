@@ -335,6 +335,33 @@ function Animation:endguv()
     self.currentFrame = 1
 end
 
+function Animation:startSR()
+    self.isShopReactioning = true
+    self.isguving = false
+    self.isBHHing = false
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+    self.isShoping = false
+
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endSR()
+    self.isShopReactioning = false
+    self.currentFrame = 1
+end
+
 function Animation:startbhh()
     self.isBHHing = true
     self.isBigSlashing = false
@@ -385,6 +412,21 @@ end
 
 function Animation:update(dt)
     local e = self.enemy
+
+    -- == Gestion shopReaction ==
+    if self.isShopReactioning then
+        self.frameTimer = self.frameTimer + dt
+
+        local shopReaction = self.enemy.sprites.shopReaction[self.enemy.side]
+        local frameTime = (self.enemy.shopReactionDuration / #shopReaction)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #shopReaction then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
 
     -- == Gestion guv ==
     if self.isguving then

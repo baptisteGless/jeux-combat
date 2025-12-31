@@ -307,6 +307,61 @@ function Animation:endRoll()
     self.player.rollDirection = 0
 end
 
+function Animation:startShopFail()
+    self.isShopFailing = true
+    self.isShopSuccessing = false
+    self.isBBHing = false
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+    self.isShoping = false
+
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endShopFail()
+    self.isShopFailing = false
+    self.state = false 
+    self.currentFrame = 1
+end
+
+function Animation:startShopSuccess()
+    self.isShopSuccessing = true
+    self.isBBHing = false
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+    self.isShoping = false
+
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endShopSuccess()
+    self.isShopSuccessing = false
+    self.state = false 
+    self.currentFrame = 1
+end
+
 function Animation:startBBH()
     self.isBBHing = true
     self.isBigSlashing = false
@@ -519,6 +574,36 @@ function Animation:update(dt)
 
         local newFrame = math.floor(self.frameTimer / frameTime) + 1
         if newFrame ~= self.currentFrame and newFrame <= #punchFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion shop-fail ===
+    if self.isShopFailing then
+        self.frameTimer = self.frameTimer + dt
+
+        local shopFailFrames = self.player.sprites.shopFailFrames[self.player.side]
+        local frameTime = (self.player.shopFailDuration / #shopFailFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #shopFailFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- === Gestion shop-success ===
+    if self.isShopSuccessing then
+        self.frameTimer = self.frameTimer + dt
+
+        local shopSuccessFrames = self.player.sprites.shopSuccessFrames[self.player.side]
+        local frameTime = (self.player.shopSuccessDuration / #shopSuccessFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #shopSuccessFrames then
             self.currentFrame = newFrame
         end
 

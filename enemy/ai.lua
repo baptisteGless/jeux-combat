@@ -167,7 +167,7 @@ function AI:update(dt)
     -- local dirToPlayer = (p.x > e.x) and 1 or -1
     local proba = math.random()
     if e.directionatk == "hitHaut" and dist < 110 and proba < 0.50 and not e.isStunned and not e.state then
-        addDebugLog("BLOCK HAUT")
+        -- addDebugLog("BLOCK HAUT")
         e.isCrouching = false
         e.wantBlock = "haut"
         if e.isBlocking then
@@ -179,7 +179,7 @@ function AI:update(dt)
         e.blockType = e.wantBlock
         return
     elseif e.directionatk == "hitBas" and dist < 110 and proba < 0.50 and not e.isStunned and not e.state then  --and math.random() < 0.95
-        addDebugLog("BLOCK BAS")
+        -- addDebugLog("BLOCK BAS")
         e.isCrouching = true
         e.wantBlock = "bas"
         if e.isBlocking then

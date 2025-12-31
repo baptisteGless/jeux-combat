@@ -19,6 +19,11 @@ end
 
 function Collision:handle(other, dt)
     local p = self.player
+
+    if p.isInShopSequence or other.isInShopSequence then
+        return
+    end
+    
     if not Collision.checkCollision(p, other) then
         p.isBlocked = false
         return
