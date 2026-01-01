@@ -272,6 +272,19 @@ function Animation:stopWalk()
 end
 
 function Animation:startJump()
+    self.isShopFailing = false
+    self.isShopSuccessing = false
+    self.isBBHing = false
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isRolling = false
+    self.isShoping = false
     self.isWalking = false
     self.isJumping = true
     self.jumpPhase = "start"   -- start → air → land

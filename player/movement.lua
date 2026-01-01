@@ -561,7 +561,7 @@ function Movement:keypressed(key)
     end
 
     if key == "up" then
-        if p.isOnGround and not p.isRolling and not p.isCrouching and not p.isBlocking and not p.state and not p.isShopSuccessing and not p.isShopFailing then
+        if p.isOnGround and not p.isRolling and not p.isCrouching and not p.isBlocking and not p.state and not p.isShopSuccessing and not p.isShopFailing and not p:isBusy() then
             Moveset.jump(p)
         end
         return
