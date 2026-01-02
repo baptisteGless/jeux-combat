@@ -22,7 +22,66 @@ function Animation.new(player)
     self.isBigSlashing = false
     self.isBasSlashing = false
     self.isShoping = false
+    self.isBBHing = false
+    self.isBHHing = false
     return self
+end
+
+function Animation:startBBH()
+    addDebugLog("===========")
+    self.isBasSlashing = false
+    self.isLowSlashing = false
+    self.isCrouching = false
+    self.isBBHing = true
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+    self.isShoping = false
+
+    self:endBasSlash()
+    
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endBBH()
+    self.isBBHing = false
+    self.state = false 
+    self.currentFrame = 1
+end
+
+function Animation:startBHH()
+    self.isCrouching = false
+    self.isBHHing = true
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+    self.isShoping = false
+
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endBHH()
+    self.isBHHing = false
+    self.state = false 
+    self.currentFrame = 1
 end
 
 function Animation:startBigSlash()
@@ -371,58 +430,6 @@ end
 
 function Animation:endShopSuccess()
     self.isShopSuccessing = false
-    self.state = false 
-    self.currentFrame = 1
-end
-
-function Animation:startBBH()
-    self.isBBHing = true
-    self.isBigSlashing = false
-    self.isHeavySlashing = false
-    self.ishit1ing = false
-    self.iskicking = false
-    self.iskneeing = false
-    self.isLowKicking = false
-    self.isLowSlashing = false
-    self.isPunching = false
-    self.isWalking = false
-    self.isJumping = false
-    self.isRolling = false
-    self.isShoping = false
-
-
-    self.currentFrame = 1
-    self.frameTimer = 0
-end
-
-function Animation:endBBH()
-    self.isBBHing = false
-    self.state = false 
-    self.currentFrame = 1
-end
-
-function Animation:startBHH()
-    self.isBHHing = true
-    self.isBigSlashing = false
-    self.isHeavySlashing = false
-    self.ishit1ing = false
-    self.iskicking = false
-    self.iskneeing = false
-    self.isLowKicking = false
-    self.isLowSlashing = false
-    self.isPunching = false
-    self.isWalking = false
-    self.isJumping = false
-    self.isRolling = false
-    self.isShoping = false
-
-
-    self.currentFrame = 1
-    self.frameTimer = 0
-end
-
-function Animation:endBHH()
-    self.isBHHing = false
     self.state = false 
     self.currentFrame = 1
 end

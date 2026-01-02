@@ -196,6 +196,11 @@ function Player.new(x, y, target)
     self.sprites = Sprites.new(self)
     self.collision = Collision.new(self)
 
+    -- Parry
+    self.parryWindow = 0
+    self.parryDuration = 0.25
+
+
     self:loadWalkSprites()
     self:loadJumpSprites() 
 

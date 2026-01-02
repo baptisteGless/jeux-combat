@@ -191,6 +191,7 @@ function Movement:update(dt)
     local p = self.player
 
     if p.animation.isBBHing then
+        p.animation:endBasSlash()
         -- addDebugLog("p.bbhTimer=" .. tostring(p.bbhTimer))
         p.bbhTimer = p.bbhTimer - dt
         if p.bbhTimer <= 0 then
@@ -208,10 +209,39 @@ function Movement:update(dt)
         return
     end
 
-    -- addDebugLog("(p.isCrouching and p.isBlocking)=" .. tostring((p.isCrouching and p.isBlocking)))
-    if p.state and not p.isRolling and not p.animation.isBBHingand and not p.animation.isBHHing then
+    -- décrément du timer
+    if p.parryWindow > 0 then
+        p.parryWindow = p.parryWindow - dt
+    end
+
+    -- -- Gestion blocage (touche F)
+    if love.keyboard.isDown("f") and not p.isShopSuccessing and not p.isShopFailing then
+        if not p.animation.isJumping then
+            p.isBlocking = true
+        end
+    else
+        p.isBlocking = false
+    end
+
+    -- décrément du timer
+    if p.parryWindow > 0 then
+        p.parryWindow = p.parryWindow - dt
+    end
+
+    -- addDebugLog("p.state=" .. tostring((p.state)))
+    if p.state and not p.isRolling and not p.animation.isBBHingand and not p.animation.isBHHing and p.isOnGround then
         -- COUP BAS
         if p.directionatk == "hitBas" then
+
+            if p.parryWindow > 0 and p.isBlocking and p.isCrouching then
+                local e = p.target
+                addDebugLog("Parry BAS")
+                e.isDeflect = true
+                p.parryWindow = 0
+                p.state = false
+                return
+            end
+
             -- bloqué SEULEMENT si accroupi + block
             if not (p.isCrouching and p.isBlocking) then
                 self:cancelShop()
@@ -219,6 +249,7 @@ function Movement:update(dt)
                 p.isBlocking = false
                 p.isCrouching = false
                 p.state = false  
+                p.animation:endBasSlash()
                 p.animation:startBBH()
             end
             return
@@ -226,11 +257,23 @@ function Movement:update(dt)
 
         -- COUP HAUT
         if p.directionatk == "hitHaut" then
+
+            if p.parryWindow > 0 and p.isBlocking and not p.isCrouching then
+                local e = p.target
+                addDebugLog("Parry HAUT")
+                e.isDeflect = true
+                p.parryWindow = 0
+                p.state = false
+                return
+            end
+
             -- bloqué SEULEMENT si block debout
             if not (p.isBlocking and not p.isCrouching) then
                 self:cancelShop()
+                -- p.isCrouching = false
                 p.bhhTimer = p.bhhDuration
                 p.state = false  
+                p.animation:endBasSlash()
                 p.animation:startBHH()
             end
             return
@@ -527,15 +570,6 @@ function Movement:update(dt)
         p.isCrouching = false
     end
 
-    -- Gestion blocage (touche F)
-    if love.keyboard.isDown("f") and not p.isShopSuccessing and not p.isShopFailing then
-        if not p.animation.isJumping then
-            p.isBlocking = true
-        end
-    else
-        p.isBlocking = false
-    end
-
     -- Si blocage -> pas de mouvement ni saut
     if p.isBlocking then return end
 
@@ -559,6 +593,19 @@ function Movement:keypressed(key)
     if p.isShopSuccessing or p.isShopFailing then
         return
     end
+
+    if key == "f" then
+        if not p.animation.isJumping
+        and not p.isShopSuccessing
+        and not p.isShopFailing then
+
+            -- ouverture de la fenêtre de parry UNIQUEMENT à l'appui
+            p.parryWindow = p.parryDuration
+            p.isBlocking = true
+        end
+        return
+    end
+
 
     if key == "up" then
         if p.isOnGround and not p.isRolling and not p.isCrouching and not p.isBlocking and not p.state and not p.isShopSuccessing and not p.isShopFailing and not p:isBusy() then

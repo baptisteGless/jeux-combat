@@ -173,6 +173,9 @@ function Enemy.new(x, y, target)
     self.guvTimer = 0
     self.guvDuration = 0.2 -- durée totale du big-slash (à ajuster)
 
+    self.isDeflect = false
+    self.deflectDuration = 0.4
+
     -- Sous-modules
     self.movement = Movement.new(self,target)
     self.animation = Animation.new(self)

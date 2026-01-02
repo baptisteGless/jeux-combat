@@ -165,7 +165,6 @@ function Movement:update(dt)
         return
     end
 
-
     if e.isGettingUp then
         e.guvTimer = e.guvTimer - dt
 
@@ -250,6 +249,7 @@ function Movement:update(dt)
         e.bhhTimer = e.bhhTimer - dt
         if e.bhhTimer <= 0 then
             -- addDebugLog("++++++")
+            e.isDeflect = false
             e.isStunned = false
             e.directionatk = "idle"
             e.hitTimer = 0
@@ -262,6 +262,15 @@ function Movement:update(dt)
     -- addDebugLog("e.isRolling=" .. tostring(e.isRolling))
     -- addDebugLog("e.animation.isBBHing=" .. tostring(e.animation.isBBHing))
     -- addDebugLog("e.animation.isBHHing=" .. tostring(e.animation.isBHHing))
+
+    if e.isDeflect == true then
+        e.isStunned = true
+        e.moveQueue = {}
+        e.bhhTimer = e.deflectDuration
+        e.state = false  
+        e.animation:startbhh()
+    end
+
     if e.state and not e.isRolling and not e.animation.isBBHing and not e.animation.isBHHing then
         
         -- if e.compteHit >= e.limiteHit and not e.thrown then

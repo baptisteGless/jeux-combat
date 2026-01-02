@@ -305,6 +305,12 @@ function Sprites:getCurrentSprite()
     elseif p.isBlocking then
         sprite = p.isCrouching and ((p.side=="G") and self.blockBasG or self.blockBasD)
                                   or ((p.side=="G") and self.blockHautG or self.blockHautD)
+    elseif p.animation.isBBHing then
+        p.isCrouching = false
+        sprite = safeFrame(self.bbhFrames[p.side])
+    elseif p.animation.isBHHing then
+        p.isCrouching = false
+        sprite = safeFrame(self.bhhFrames[p.side])
     elseif p.animation.isBasSlashing then
         sprite = safeFrame(self.basSlashFrames[p.side])
     elseif p.isCrouching then
@@ -337,10 +343,6 @@ function Sprites:getCurrentSprite()
         sprite = safeFrame(self.shopFrames[p.side])
     elseif p.animation.isPunching then
         sprite = safeFrame(self.punchFrames[p.side])
-    elseif p.animation.isBBHing then
-        sprite = safeFrame(self.bbhFrames[p.side])
-    elseif p.animation.isBHHing then
-        sprite = safeFrame(self.bhhFrames[p.side])
     elseif p.animation.isWalking then
         local frames = (p.animation.walkType=="forward") and p.walkForwardFrames[p.side] or p.walkBackwardFrames[p.side]
         sprite = safeFrame(frames)
