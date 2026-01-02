@@ -176,6 +176,12 @@ function Enemy.new(x, y, target)
     self.isDeflect = false
     self.deflectDuration = 0.4
 
+    -- effet sable
+    self.sandImpactDone = false
+    self.fx = {
+        sandList = {}
+    }
+
     -- Sous-modules
     self.movement = Movement.new(self,target)
     self.animation = Animation.new(self)
@@ -353,10 +359,20 @@ function Enemy:update(dt,other)
     self.movement:update(dt)
     self.animation:update(dt)
     self.collision:handle(other, dt)
+    for i = #self.fx.sandList, 1, -1 do
+        local fx = self.fx.sandList[i]
+        fx:update(dt)
+        if fx.finished then
+            table.remove(self.fx.sandList, i)
+        end
+    end
 end
 
 function Enemy:draw()
     self.sprites:draw()
+    for _, fx in ipairs(self.fx.sandList) do
+        fx:draw()
+    end
 end
 
 function Enemy:updateOrientation(other)

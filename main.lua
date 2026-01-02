@@ -4,6 +4,18 @@ local Enemy = require("enemy")    -- ça charge enemy/init.lua automatiquement
 debugLog = ""
 local MAX_DEBUG_LINES = 10
 
+-- ===== SAND FX =====
+local SandFX = require("sandFX")
+
+local sandFrames = {
+    love.graphics.newImage("images/effet/sand/sand-spred-1.png"),
+    love.graphics.newImage("images/effet/sand/sand-spred-2.png"),
+    love.graphics.newImage("images/effet/sand/sand-spred-3.png"),
+    love.graphics.newImage("images/effet/sand/sand-spred-4.png"),
+    love.graphics.newImage("images/effet/sand/sand-spred-5.png"),
+    love.graphics.newImage("images/effet/sand/sand-spred-6.png"),
+}
+
 function checkCollision(a, b)
     return a.x < b.x + b.width and
            a.x + a.width > b.x and
@@ -42,6 +54,9 @@ function love.load()
     -- Créer l’ennemi (autre Player pour l’instant)
     enemy = Enemy.new(screenWidth - 400, screenHeight - 150, player)
     player.target = enemy
+
+    enemy.fx.sandFrames = sandFrames
+    enemy.fx.SandFX = SandFX
 end
 
 function love.update(dt)

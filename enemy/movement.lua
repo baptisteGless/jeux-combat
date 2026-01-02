@@ -201,6 +201,14 @@ function Movement:update(dt)
 
         e.x = nextX
 
+        -- === IMPACT SOL AU MILIEU DE LA CHUTE ===
+        if not e.sandImpactDone and e.thrownTimer <= (e.thrownDuration / 2) + 0.2 then
+            local x = e.x + (e.width*2)
+            local y = e.y + e.height
+            table.insert(e.fx.sandList, e.fx.SandFX:new(e.fx.sandFrames, x, y))
+            e.sandImpactDone = true
+        end
+
         -- AUCUNE AUTRE ACTION
         if e.thrownTimer <= 0 then
             e.thrown = false
@@ -275,6 +283,7 @@ function Movement:update(dt)
         
         -- if e.compteHit >= e.limiteHit and not e.thrown then
         if e.fall and not e.thrown then
+            e.sandImpactDone = false
             e.fall = false
             e.thrown = true
             e.thrownTimer = e.thrownDuration
