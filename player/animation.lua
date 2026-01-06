@@ -28,7 +28,7 @@ function Animation.new(player)
 end
 
 function Animation:startBBH()
-    addDebugLog("===========")
+    -- addDebugLog("===========")
     self.isBasSlashing = false
     self.isLowSlashing = false
     self.isCrouching = false

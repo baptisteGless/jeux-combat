@@ -8,12 +8,22 @@ local MAX_DEBUG_LINES = 10
 local SandFX = require("sandFX")
 
 local sandFrames = {
-    love.graphics.newImage("images/effet/sand/sand-spred-1.png"),
-    love.graphics.newImage("images/effet/sand/sand-spred-2.png"),
-    love.graphics.newImage("images/effet/sand/sand-spred-3.png"),
-    love.graphics.newImage("images/effet/sand/sand-spred-4.png"),
-    love.graphics.newImage("images/effet/sand/sand-spred-5.png"),
-    love.graphics.newImage("images/effet/sand/sand-spred-6.png"),
+    G = {
+        love.graphics.newImage("images/effet/sand/sand-spred-1-G.png"),
+        love.graphics.newImage("images/effet/sand/sand-spred-2-G.png"),
+        love.graphics.newImage("images/effet/sand/sand-spred-3-G.png"),
+        love.graphics.newImage("images/effet/sand/sand-spred-4-G.png"),
+        love.graphics.newImage("images/effet/sand/sand-spred-5-G.png"),
+        love.graphics.newImage("images/effet/sand/sand-spred-6-G.png"),
+    },
+    D = {
+        love.graphics.newImage("images/effet/sand/sand-spred-1-D.png"),
+        love.graphics.newImage("images/effet/sand/sand-spred-2-D.png"),
+        love.graphics.newImage("images/effet/sand/sand-spred-3-D.png"),
+        love.graphics.newImage("images/effet/sand/sand-spred-4-D.png"),
+        love.graphics.newImage("images/effet/sand/sand-spred-5-D.png"),
+        love.graphics.newImage("images/effet/sand/sand-spred-6-D.png"),
+    }
 }
 
 function checkCollision(a, b)

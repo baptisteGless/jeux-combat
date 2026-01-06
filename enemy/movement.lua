@@ -203,9 +203,22 @@ function Movement:update(dt)
 
         -- === IMPACT SOL AU MILIEU DE LA CHUTE ===
         if not e.sandImpactDone and e.thrownTimer <= (e.thrownDuration / 2) + 0.2 then
-            local x = e.x + (e.width*2)
+            local fx = e.fx
+            local baseX = e.x + e.width / 2
+            local offsetX = (e.throwDirection == -1) and -40 or 40
+            local x = baseX + offsetX
             local y = e.y + e.height
-            table.insert(e.fx.sandList, e.fx.SandFX:new(e.fx.sandFrames, x, y))
+            local fx = e.fx
+
+            -- Choix des frames selon la direction
+            local frames
+            if e.throwDirection == -1 then
+                frames = fx.sandFrames.D   -- projection vers la gauche
+            else
+                frames = fx.sandFrames.G   -- projection vers la droite
+            end
+
+            table.insert(fx.sandList, fx.SandFX:new(frames, x, y))
             e.sandImpactDone = true
         end
 
