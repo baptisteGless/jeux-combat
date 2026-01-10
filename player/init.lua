@@ -188,7 +188,32 @@ function Player.new(x, y, target)
     self.bhhTimer = 0
     self.bhhDuration = 0.2  -- durée de l’animation du coup reçu
 
+    -- Envoyer dans le decore
+    self.fall = false
+    self.thrown = false
+    self.thrownTimer = 0
+    self.thrownDuration = 0.8
+    self.compteHit = 0
+    self.limiteHit = 4
+    self.hitLock = false  
+
+    self.throwVelocity = 0
+    self.throwDirection = 0
+
     self.target = target 
+
+    -- état de get-up-v
+    self.isGettingUp = false
+    self.guvTimer = 0
+    self.guvDuration = 0.2 -- durée totale du big-slash (à ajuster)
+
+    -- effet sable et effet hity
+    self.hitImpactDone = false
+    self.sandImpactDone = false
+    self.fx = {
+        sandList = {},
+        hitList = {}
+    }
 
     -- Sous-modules
     self.movement = Movement.new(self)
@@ -200,11 +225,147 @@ function Player.new(x, y, target)
     self.parryWindow = 0
     self.parryDuration = 0.25
 
+    -- healthbar
+    self.maxHp = 100
+    self.hp = self.maxHp
+    self.isKO = false
+    self.gameOver = false
 
     self:loadWalkSprites()
     self:loadJumpSprites() 
 
     return self
+end
+
+function Player:takeDamage(amount, hitType)
+    if self.hp <= 0 then return end
+
+    self.hp = math.max(0, self.hp - amount)
+    self.hitImpactDone = false
+    self.lastHitType = hitType
+    if self.hp == 0 and not self.isKO then
+        self.isKO = true
+        self.fall = true
+        self.state = true
+    end
+end
+
+function Player:spawnHitFX(type)
+    local fx = self.fx
+    if not fx or not fx.HitFX then return end
+
+    local side = self.side or "G"
+
+    local framesboom = fx.hitFrames[side]
+    if not framesboom then return end
+
+    local framesfall = fx.hitFramesfall[side]
+    if not framesfall then return end
+
+    local scale = 0.5
+
+    -- position de base
+    local baseX = self.x + self.width / 2
+    local y = self.y
+
+    if type == 1 then
+        y  = self.y + self.height * 0.85
+        if side == "G" then
+            baseX = baseX + 10
+        else
+            baseX = baseX - 10
+        end
+        frames = framesboom
+        scale = 0.5
+        frameDuration = 0.05
+    elseif type == 2 then
+        y  = self.y + self.height * 0.85
+        if side == "G" then
+            baseX = baseX + 10
+        else
+            baseX = baseX - 10
+        end
+        frames = framesboom
+        scale = 0.5
+        frameDuration = 0.05
+    elseif type == 3 then
+        y  = self.y + self.height * 0.95
+        frames = framesboom
+        scale = 0.5
+        frameDuration = 0.05
+    elseif type == 4 then
+        y  = self.y + self.height * 0.5
+        if side == "G" then
+            baseX = baseX + 10
+        else
+            baseX = baseX - 10
+        end
+        frames = framesboom
+        scale = 0.5
+        frameDuration = 0.05
+    elseif type == 5 then
+        y  = self.y + self.height * 0.95
+        frames = framesboom
+        scale = 0.5
+        frameDuration = 0.05
+    elseif type == 6 then
+        y  = self.y + self.height * 0.3
+        frames = framesfall
+        if side == "G" then
+            baseX = baseX + 30
+        else
+            baseX = baseX - 30
+        end
+        scale = 0.2
+        frameDuration = 0.08
+    elseif type == 7 then
+        y  = self.y + self.height * 0.45
+        if side == "G" then
+            baseX = baseX + 10
+        else
+            baseX = baseX - 10
+        end
+        frames = framesboom
+        scale = 0.5
+        frameDuration = 0.05
+    elseif type == 8 then
+        y  = self.y + self.height * 0.3
+        if side == "G" then
+            baseX = baseX + 15
+            framesfall = fx.hitFramesfall["D"]
+        else
+            baseX = baseX - 15
+            framesfall = fx.hitFramesfall["G"]
+        end
+        frames = framesfall
+        scale = 0.2
+        frameDuration = 0.08
+    elseif type == 9 then
+        y  = self.y + self.height * 0.35
+        if side == "G" then
+            baseX = baseX + 10
+        else
+            baseX = baseX - 10
+        end
+        frames = framesboom
+        scale = 0.5
+        frameDuration = 0.05
+    elseif type == 10 then
+        y  = self.y + self.height * 0.35
+        if side == "G" then
+            baseX = baseX + 50
+        else
+            baseX = baseX - 50
+        end
+        frames = framesfall
+        scale = 0.2
+        frameDuration = 0.08
+    end
+
+    table.insert(
+        fx.hitList,
+        fx.HitFX:new(frames, baseX, y, scale, frameDuration)
+    )
 end
 
 function Player:getAttackHitbox()
@@ -226,7 +387,7 @@ function Player:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitBas", strick = strick, fall = false }
+        return { x = x, y = y, width = w, height = h, type = "hitBas", strick = strick, fall = false, hitType = 1 }
     elseif self.isLowSlashing then
         strick = false
         if anim.currentFrame == 2 then
@@ -242,7 +403,7 @@ function Player:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitBas", strick = strick, fall = false }
+        return { x = x, y = y, width = w, height = h, type = "hitBas", strick = strick, fall = false, hitType = 2 }
     elseif self.isLowKicking then
         strick = false
         if anim.currentFrame == 2 then
@@ -258,7 +419,7 @@ function Player:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitBas", strick = strick, fall = false }
+        return { x = x, y = y, width = w, height = h, type = "hitBas", strick = strick, fall = false, hitType = 3 }
     elseif self.ishit1ing then
         strick = false
         if anim.currentFrame == 2 then
@@ -274,7 +435,7 @@ function Player:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick, fall = false }
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick, fall = false, hitType = 4 }
     elseif self.iskicking then
         strick = false
         if anim.currentFrame == 2 then
@@ -290,7 +451,7 @@ function Player:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick, fall = false }
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick, fall = false, hitType = 5 }
     elseif self.isHeavySlashing then
         strick = false
         if anim.currentFrame == 3 then
@@ -306,7 +467,7 @@ function Player:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick, fall = true }
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick, fall = true, hitType = 6 }
     elseif self.iskneeing then
         strick = false
         if anim.currentFrame == 2 then
@@ -322,7 +483,7 @@ function Player:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick, fall = false }
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick, fall = false, hitType = 7 }
     elseif self.isBigSlashing then
         strick = false
         if anim.currentFrame == 4 or anim.currentFrame == 5 then
@@ -338,7 +499,7 @@ function Player:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick, fall = true }
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick, fall = true, hitType = 8 }
     elseif self.isPunching then
         strick = false
         if anim.currentFrame == 2 then
@@ -354,7 +515,7 @@ function Player:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick, fall = false }
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick, fall = false, hitType = 9 }   
     end
 
     return nil
@@ -374,10 +535,30 @@ function Player:update(dt, other)
     self.sprites.otherPlayer = other
 
     local attackActive = self:isBusy()
+    for i = #self.fx.sandList, 1, -1 do
+        local fx = self.fx.sandList[i]
+        fx:update(dt)
+        if fx.finished then
+            table.remove(self.fx.sandList, i)
+        end
+    end
+    for i = #self.fx.hitList, 1, -1 do
+        local fx = self.fx.hitList[i]
+        fx:update(dt)
+        if fx.finished then
+            table.remove(self.fx.hitList, i)
+        end
+    end
 end
 
 function Player:draw()
     self.sprites:draw()
+    for _, fx in ipairs(self.fx.sandList) do
+        fx:draw()
+    end
+    for _, fx in ipairs(self.fx.hitList) do
+        fx:draw()
+    end
 end
 
 function Player:updateOrientation(other)

@@ -1,5 +1,6 @@
 local Player = require("player")  -- ça charge player/init.lua automatiquement
 local Enemy = require("enemy")    -- ça charge enemy/init.lua automatiquement
+local HealthBar = require("healthbar") -- les bar de vie des 2 personnages
 
 debugLog = ""
 local MAX_DEBUG_LINES = 10
@@ -23,6 +24,49 @@ local sandFrames = {
         love.graphics.newImage("images/effet/sand/sand-spred-4-D.png"),
         love.graphics.newImage("images/effet/sand/sand-spred-5-D.png"),
         love.graphics.newImage("images/effet/sand/sand-spred-6-D.png"),
+    }
+}
+
+-- ===== HIT FX =====
+local HitFX = require("hitFX")
+
+local hitFrames = {
+    G = {
+        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-1-G.png"),
+        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-2-G.png"),
+        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-3-G.png"),
+        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-4-G.png"),
+        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-5-G.png"),
+        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-6-G.png"),
+        love.graphics.newImage("images/effet/blood-effect/blood-boom-1-G.png"),
+        love.graphics.newImage("images/effet/blood-effect/blood-boom-2-G.png"),
+        love.graphics.newImage("images/effet/blood-effect/blood-boom-3-G.png"),
+        love.graphics.newImage("images/effet/blood-effect/blood-boom-4-G.png"),
+    },
+    D = {
+        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-1-D.png"),
+        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-2-D.png"),
+        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-3-D.png"),
+        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-4-D.png"),
+        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-5-D.png"),
+        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-6-D.png"),
+        love.graphics.newImage("images/effet/blood-effect/blood-boom-1-D.png"),
+        love.graphics.newImage("images/effet/blood-effect/blood-boom-2-D.png"),
+        love.graphics.newImage("images/effet/blood-effect/blood-boom-3-D.png"),
+        love.graphics.newImage("images/effet/blood-effect/blood-boom-4-D.png"),
+    }
+}
+
+local hitFramesfall = {
+    G = {
+        love.graphics.newImage("images/effet/blood-effect/blood-effect-4-G.png"),
+        love.graphics.newImage("images/effet/blood-effect/blood-effect-5-G.png"),
+        love.graphics.newImage("images/effet/blood-effect/blood-effect-6-G.png"),
+    },
+    D = {
+        love.graphics.newImage("images/effet/blood-effect/blood-effect-4-D.png"),
+        love.graphics.newImage("images/effet/blood-effect/blood-effect-5-D.png"),
+        love.graphics.newImage("images/effet/blood-effect/blood-effect-6-D.png"),
     }
 }
 
@@ -65,8 +109,39 @@ function love.load()
     enemy = Enemy.new(screenWidth - 400, screenHeight - 150, player)
     player.target = enemy
 
+    enemy.fx.hitFrames = hitFrames
+    enemy.fx.hitFramesfall = hitFramesfall
+    enemy.fx.HitFX = HitFX
+    player.fx.hitFrames = hitFrames
+    player.fx.hitFramesfall = hitFramesfall
+    player.fx.HitFX = HitFX
+
+    player.fx.sandFrames = sandFrames
+    player.fx.SandFX = SandFX
     enemy.fx.sandFrames = sandFrames
     enemy.fx.SandFX = SandFX
+    
+    -- Chargement bar de vie
+    local barWidth = 300
+    local barHeight = 20
+    local padding = 30
+    local y = screenHeight - 50
+
+    playerHealthBar = HealthBar:new(
+        screenWidth / 2 - barWidth - padding,
+        y,
+        barWidth,
+        barHeight,
+        player
+    )
+
+    enemyHealthBar = HealthBar:new(
+        screenWidth / 2 + padding,
+        y,
+        barWidth,
+        barHeight,
+        enemy
+    )
 end
 
 function love.update(dt)
@@ -83,9 +158,12 @@ function love.update(dt)
     if atkennemy and checkCollision(atkennemy, player) then
         player.directionatk = atkennemy.type
         player.state = atkennemy.strick 
+        player.hitType = atkennemy.hitType
         player.hitTimer = 0
+        player.fall = atkennemy.fall
     end
     if atk then
+        enemy.hitType = atk.hitType
         enemy.directionatk = atk.type
     end
     if atk and checkCollision(atk, enemy) then
@@ -108,6 +186,10 @@ function love.draw()
     -- Dessiner le joueur et l’ennemi
     player:draw()
     enemy:draw()
+    -- HUD
+    playerHealthBar:draw()
+    enemyHealthBar:draw()
+
     love.graphics.setColor(1,1,1,1)
     love.graphics.print(debugLog, 10, 10)
 end

@@ -22,38 +22,52 @@ function AI.new(enemy, target)
     self.attackOptions = {
         {
             id = "1",      -- punch rapide
-            minRange = 30,
-            maxRange = 120,
-            chance = 0.60,
-            priority = 5,
+            minRange = 0,
+            maxRange = 80,
+            chance = 0.45,
+            priority = 3,
         },
         {
             id = "6",      -- lowKick court
             minRange = 0,
             maxRange = 80,
-            chance = 0.45,
-            priority = 10,
+            chance = 0.4,
+            priority = 3,
         },
         {
             id = "2",      -- haut → bas combo
-            minRange = 40,
+            minRange = 0,
             maxRange = 110,
-            chance = 0.30,
-            priority = 4,
+            chance = 0.5,
+            priority = 3,
         },
         {
-            id = "4",      -- combo strong
-            minRange = 70,
+            id = "4",      -- combo bigSlash
+            minRange = 0,
+            maxRange = 200,
+            chance = 0.4,
+            priority = 3,
+        },
+        {
+            id = "7",      -- combo knee
+            minRange = 0,
+            maxRange = 80,
+            chance = 0.43,
+            priority = 3,
+        },
+        {
+            id = "8",      -- combo heavySlash
+            minRange = 0,
             maxRange = 160,
-            chance = 0.18,
+            chance = 0.4,
             priority = 3,
         },
         {
             id = "9",      -- dash punch
-            minRange = 100,
+            minRange = 0,
             maxRange = 200,
-            chance = 0.15,
-            priority = 2,
+            chance = 0.55,
+            priority = 3,
         }
     }
 
@@ -107,7 +121,11 @@ end
 function AI:update(dt)
     local e = self.enemy
     local p = self.target
+    
+    -- local stopTest = true
 
+    -- if stopTest then return end
+    
     if e.isGettingUp or e.thrown then
         return
     end

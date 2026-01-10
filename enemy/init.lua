@@ -176,10 +176,12 @@ function Enemy.new(x, y, target)
     self.isDeflect = false
     self.deflectDuration = 0.4
 
-    -- effet sable
+    -- effet sable et effet hity
+    self.hitImpactDone = false
     self.sandImpactDone = false
     self.fx = {
-        sandList = {}
+        sandList = {},
+        hitList = {}
     }
 
     -- Sous-modules
@@ -188,10 +190,151 @@ function Enemy.new(x, y, target)
     self.sprites = Sprites.new(self)
     self.collision = Collision.new(self)
 
+    -- healthbar
+    self.maxHp = 1000
+    self.hp = self.maxHp
+    self.isKO = false
+    self.gameOver = false
+
     self:loadWalkSprites()
     -- self:loadJumpSprites() 
 
     return self
+end
+
+function Enemy:takeDamage(amount, hitType)
+    if self.hp <= 0 then return end
+
+    self.hp = math.max(0, self.hp - amount)
+
+    -- reset pour autoriser le FX hit
+    self.hitImpactDone = false
+
+    -- stocker le type de coup (haut / bas)
+    self.lastHitType = hitType
+    if self.hp == 0 and not self.isKO then
+        self.isKO = true
+        self.fall = true
+        self.state = true
+    end
+end
+
+function Enemy:spawnHitFX(type)
+    local fx = self.fx
+    if not fx or not fx.HitFX then return end
+
+    local side = self.side or "G"
+
+    local framesboom = fx.hitFrames[side]
+    if not framesboom then return end
+
+    local framesfall = fx.hitFramesfall[side]
+    if not framesfall then return end
+
+    local scale = 0.5
+
+    -- position de base
+    local baseX = self.x + self.width / 2
+    local y = self.y
+
+    if type == 1 then
+        y  = self.y + self.height * 0.85
+        if side == "G" then
+            baseX = baseX + 10
+        else
+            baseX = baseX - 10
+        end
+        frames = framesboom
+        scale = 0.5
+        frameDuration = 0.05
+    elseif type == 2 then
+        y  = self.y + self.height * 0.85
+        if side == "G" then
+            baseX = baseX + 10
+        else
+            baseX = baseX - 10
+        end
+        frames = framesboom
+        scale = 0.5
+        frameDuration = 0.05
+    elseif type == 3 then
+        y  = self.y + self.height * 0.95
+        frames = framesboom
+        scale = 0.5
+        frameDuration = 0.05
+    elseif type == 4 then
+        y  = self.y + self.height * 0.5
+        if side == "G" then
+            baseX = baseX + 10
+        else
+            baseX = baseX - 10
+        end
+        frames = framesboom
+        scale = 0.5
+        frameDuration = 0.05
+    elseif type == 5 then
+        y  = self.y + self.height * 0.95
+        frames = framesboom
+        scale = 0.5
+        frameDuration = 0.05
+    elseif type == 6 then
+        y  = self.y + self.height * 0.3
+        frames = framesfall
+        if side == "G" then
+            baseX = baseX + 30
+        else
+            baseX = baseX - 30
+        end
+        scale = 0.2
+        frameDuration = 0.08
+    elseif type == 7 then
+        y  = self.y + self.height * 0.45
+        if side == "G" then
+            baseX = baseX + 10
+        else
+            baseX = baseX - 10
+        end
+        frames = framesboom
+        scale = 0.5
+        frameDuration = 0.05
+    elseif type == 8 then
+        y  = self.y + self.height * 0.3
+        if side == "G" then
+            baseX = baseX + 15
+            framesfall = fx.hitFramesfall["D"]
+        else
+            baseX = baseX - 15
+            framesfall = fx.hitFramesfall["G"]
+        end
+        frames = framesfall
+        scale = 0.2
+        frameDuration = 0.08
+    elseif type == 9 then
+        y  = self.y + self.height * 0.35
+        if side == "G" then
+            baseX = baseX + 10
+        else
+            baseX = baseX - 10
+        end
+        frames = framesboom
+        scale = 0.5
+        frameDuration = 0.05
+    elseif type == 10 then
+        y  = self.y + self.height * 0.35
+        if side == "G" then
+            baseX = baseX + 50
+        else
+            baseX = baseX - 50
+        end
+        frames = framesfall
+        scale = 0.2
+        frameDuration = 0.08
+    end
+
+    table.insert(
+        fx.hitList,
+        fx.HitFX:new(frames, baseX, y, scale, frameDuration)
+    )
 end
 
 function Enemy:getAttackHitbox()
@@ -213,7 +356,7 @@ function Enemy:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitBas", strick = strick }
+        return { x = x, y = y, width = w, height = h, type = "hitBas", strick = strick, fall = false, hitType = 1 }
     elseif anim.isLowSlashing then
         strick = false
         if anim.currentFrame == 2 then
@@ -229,7 +372,7 @@ function Enemy:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitBas", strick = strick }
+        return { x = x, y = y, width = w, height = h, type = "hitBas", strick = strick, fall = false, hitType = 2 }
     elseif anim.isLowKicking then
         strick = false
         if anim.currentFrame == 2 then
@@ -245,7 +388,7 @@ function Enemy:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitBas", strick = strick }
+        return { x = x, y = y, width = w, height = h, type = "hitBas", strick = strick, fall = false, hitType = 3 }
     elseif anim.ishit1ing then
         strick = false
         if anim.currentFrame == 2 then
@@ -261,7 +404,7 @@ function Enemy:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick }
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick, fall = false, hitType = 4 }
     elseif anim.iskicking then
         strick = false
         if anim.currentFrame == 2 then
@@ -277,7 +420,7 @@ function Enemy:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick }
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick, fall = false, hitType = 5 }
     elseif anim.isHeavySlashing then
         strick = false
         if anim.currentFrame == 3 then
@@ -293,7 +436,7 @@ function Enemy:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick }
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick, fall = true, hitType = 6 }
     elseif anim.iskneeing then
         strick = false
         if anim.currentFrame == 2 then
@@ -309,7 +452,7 @@ function Enemy:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick }
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick, fall = false, hitType = 7 }
     elseif anim.isBigSlashing then
         strick = false
         if anim.currentFrame == 4 or anim.currentFrame == 5 then
@@ -325,7 +468,7 @@ function Enemy:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick }
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick, fall = true, hitType = 8 }
     elseif anim.isPunching then
         strick = false
         if anim.currentFrame == 2 then
@@ -341,7 +484,7 @@ function Enemy:getAttackHitbox()
             x = x - w
         end
 
-        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick }
+        return { x = x, y = y, width = w, height = h, type = "hitHaut", strick = strick, fall = false, hitType = 9 }
     end
 
     return nil
@@ -366,11 +509,21 @@ function Enemy:update(dt,other)
             table.remove(self.fx.sandList, i)
         end
     end
+    for i = #self.fx.hitList, 1, -1 do
+        local fx = self.fx.hitList[i]
+        fx:update(dt)
+        if fx.finished then
+            table.remove(self.fx.hitList, i)
+        end
+    end
 end
 
 function Enemy:draw()
     self.sprites:draw()
     for _, fx in ipairs(self.fx.sandList) do
+        fx:draw()
+    end
+    for _, fx in ipairs(self.fx.hitList) do
         fx:draw()
     end
 end

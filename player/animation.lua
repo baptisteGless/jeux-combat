@@ -434,8 +434,90 @@ function Animation:endShopSuccess()
     self.currentFrame = 1
 end
 
+function Animation:startguv()
+    self.isguving = true
+    self.isBHHing = false
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+    self.isShoping = false
+
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endguv()
+    self.isguving = false
+    self.currentFrame = 1
+end
+
+function Animation:startSR()
+    self.isShopReactioning = true
+    self.isguving = false
+    self.isBHHing = false
+    self.isBigSlashing = false
+    self.isHeavySlashing = false
+    self.ishit1ing = false
+    self.iskicking = false
+    self.iskneeing = false
+    self.isLowKicking = false
+    self.isLowSlashing = false
+    self.isPunching = false
+    self.isWalking = false
+    self.isJumping = false
+    self.isRolling = false
+    self.isShoping = false
+
+
+    self.currentFrame = 1
+    self.frameTimer = 0
+end
+
+function Animation:endSR()
+    self.isShopReactioning = false
+    self.currentFrame = 1
+end
+
 function Animation:update(dt)
     local p = self.player
+
+     -- == Gestion guv ==
+    if self.isguving then
+        self.frameTimer = self.frameTimer + dt
+
+        local guvFrames = self.player.sprites.guv[self.player.side]
+        local frameTime = (self.player.guvDuration / #guvFrames)
+
+        local newFrame = math.floor(self.frameTimer / frameTime) + 1
+        if newFrame ~= self.currentFrame and newFrame <= #guvFrames then
+            self.currentFrame = newFrame
+        end
+
+        return
+    end
+
+    -- == Gestion chute ==
+    if p.thrown then
+        self.frameTimer = self.frameTimer + dt
+
+        local frames = p.sprites.fallLow[p.side]
+        local frameTime = p.thrownDuration / #frames
+
+        self.currentFrame = math.min(
+            math.floor(self.frameTimer / frameTime) + 1,
+            #frames
+        )
+        return
+    end
 
     if self.isBBHing then
         self.frameTimer = self.frameTimer + dt

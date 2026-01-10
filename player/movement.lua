@@ -190,6 +190,92 @@ end
 function Movement:update(dt)
     local p = self.player
 
+    if p.gameOver then
+        return
+    end
+    if p.isKO then
+        -- laisser tomber / glisser
+        p.fall = true
+        p.state = true
+    end
+
+    if p.isGettingUp then
+        p.guvTimer = p.guvTimer - dt
+
+        if p.guvTimer <= 0 then
+            p.isGettingUp = false
+            p.animation:endguv()
+
+            p.state = false
+            p.directionatk = "idle"
+            p.isStunned = false
+            p.wantMove = 0
+            p.rollRequested = false
+        end
+
+        return
+    end
+
+    if p.thrown then
+        p.thrownTimer = p.thrownTimer - dt
+
+        -- déplacement
+        local dx = p.throwDirection * p.throwVelocity * dt
+        p.throwVelocity = p.throwVelocity * 0.92  -- friction sol
+
+        local nextX = p.x + dx
+
+        if nextX < 0 then
+            nextX = 0
+            p.throwVelocity = 0
+        elseif nextX + p.width > love.graphics.getWidth() then
+            nextX = love.graphics.getWidth() - p.width
+            p.throwVelocity = 0
+        end
+
+        p.x = nextX
+
+        -- === IMPACT SOL AU MILIEU DE LA CHUTE ===
+        if not p.sandImpactDone and p.thrownTimer <= (p.thrownDuration / 2) + 0.2 then
+            local baseX = p.x + p.width / 2
+            local offsetX = (p.throwDirection == -1) and -40 or 40
+            local x = baseX + offsetX
+            local y = p.y + p.height
+            local fx = p.fx
+
+            -- Choix des frames selon la direction
+            local frames
+            if p.throwDirection == -1 then
+                frames = fx.sandFrames.D   -- projection vers la gauche
+            else
+                frames = fx.sandFrames.G   -- projection vers la droite
+            end
+
+            table.insert(fx.sandList, fx.SandFX:new(frames, x, y))
+            p.sandImpactDone = true
+        end
+
+        -- AUCUNE AUTRE ACTION
+        if p.thrownTimer <= 0 then
+            p.thrown = false
+            -- p.isStunned = false
+            p.throwVelocity = 0
+            if p.isKO then
+                p.gameOver = true
+                return
+            end
+            p.isGettingUp = true
+            p.guvTimer = p.guvDuration
+            p.animation:startguv()
+        end
+
+        return
+    end
+
+    if player.thrown or player.isGettingUp then
+        return
+    end
+
     if p.animation.isBBHing then
         p.animation:endBasSlash()
         -- addDebugLog("p.bbhTimer=" .. tostring(p.bbhTimer))
@@ -223,6 +309,12 @@ function Movement:update(dt)
         p.isBlocking = false
     end
 
+    if love.keyboard.isDown("down") and p.isOnGround and not p.isRolling and not p.isShopSuccessing and not p.isShopFailing and not p.animation.isBBHingand and not p.animation.isBHHing then
+        p.isCrouching = true
+    else
+        p.isCrouching = false
+    end
+
     -- décrément du timer
     if p.parryWindow > 0 then
         p.parryWindow = p.parryWindow - dt
@@ -230,6 +322,50 @@ function Movement:update(dt)
 
     -- addDebugLog("p.state=" .. tostring((p.state)))
     if p.state and not p.isRolling and not p.animation.isBBHingand and not p.animation.isBHHing and p.isOnGround then
+
+        if p.fall and not p.thrown and not p.isBlocking then
+            if (p.hitType == 6 or p.hitType == 8) and not p.isCrouching then
+                if p.hitType == 1 or p.hitType == 2 or p.hitType == 4 or p.hitType == 6 or p.hitType == 8 then
+                    p:spawnHitFX(p.hitType) 
+                end
+                p.sandImpactDone = false
+                p.fall = false
+                p.thrown = true
+                p.thrownTimer = p.thrownDuration
+
+                -- direction opposée au joueur
+                local e = p.target
+                p.throwDirection = (p.x < e.x) and -1 or 1
+
+                -- distance variable selon position écran
+                local screenW = love.graphics.getWidth()
+                local distToEdge
+
+                if p.throwDirection == -1 then
+                    distToEdge = p.x
+                else
+                    distToEdge = screenW - (p.x + p.width)
+                end
+
+                -- puissance proportionnelle à l’espace dispo
+                local maxThrow = 620
+                local minThrow = 220
+                local factor = math.min(distToEdge / 200, 1)
+
+                p.throwVelocity = minThrow + (maxThrow - minThrow) * factor
+
+                -- hard lock
+                p.isStunned = true
+                p.state = false
+                p.directionatk = "idle"
+                p.moveQueue = {}
+                p.rollRequested = false
+                p.wantMove = 0
+
+                return
+            end
+        end
+
         -- COUP BAS
         if p.directionatk == "hitBas" then
 
@@ -251,6 +387,9 @@ function Movement:update(dt)
                 p.state = false  
                 p.animation:endBasSlash()
                 p.animation:startBBH()
+                if p.hitType == 1 or p.hitType == 2 or p.hitType == 4 or p.hitType == 6 or p.hitType == 8 then
+                    p:spawnHitFX(p.hitType) 
+                end
             end
             return
         end
@@ -268,13 +407,16 @@ function Movement:update(dt)
             end
 
             -- bloqué SEULEMENT si block debout
-            if not (p.isBlocking and not p.isCrouching) then
+            if not p.isBlocking and not p.isCrouching then
                 self:cancelShop()
                 -- p.isCrouching = false
                 p.bhhTimer = p.bhhDuration
                 p.state = false  
                 p.animation:endBasSlash()
                 p.animation:startBHH()
+                if p.hitType == 1 or p.hitType == 2 or p.hitType == 4 or p.hitType == 6 or p.hitType == 8 then
+                    p:spawnHitFX(p.hitType) 
+                end
             end
             return
         end
@@ -564,11 +706,6 @@ function Movement:update(dt)
     -- Gérer accroupissement
     -- addDebugLog("p.directionatk == hitBas=" .. tostring(p.directionatk == "hitBas"))
     -- addDebugLog("p.isCrouching=" .. tostring(p.isCrouching))
-    if love.keyboard.isDown("down") and p.isOnGround and not p.isRolling and not p.isShopSuccessing and not p.isShopFailing then
-        p.isCrouching = true
-    else
-        p.isCrouching = false
-    end
 
     -- Si blocage -> pas de mouvement ni saut
     if p.isBlocking then return end

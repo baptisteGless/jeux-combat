@@ -423,6 +423,10 @@ function Animation:update(dt)
         local newFrame = math.floor(self.frameTimer / frameTime) + 1
         if newFrame ~= self.currentFrame and newFrame <= #shopReaction then
             self.currentFrame = newFrame
+            -- Déclenchement sur la frame 14
+            if self.currentFrame == 14 then
+                e:spawnHitFX(10)
+            end
         end
 
         return

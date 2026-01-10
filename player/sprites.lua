@@ -11,6 +11,9 @@ function Sprites.new(player)
     self.poseBasG = love.graphics.newImage("images/perso_images/poseBAS-G.png")
     self.poseBasD = love.graphics.newImage("images/perso_images/poseBAS-D.png")
 
+    self.KOG = love.graphics.newImage("images/perso_images/KO/KO-G.png")
+    self.KOD = love.graphics.newImage("images/perso_images/KO/KO-D.png")
+
     self.blockHautG = love.graphics.newImage("images/perso_images/blockHAUT-G.png")
     self.blockHautD = love.graphics.newImage("images/perso_images/blockHAUT-D.png")
     self.blockBasG  = love.graphics.newImage("images/perso_images/blockBAS-G.png")
@@ -279,6 +282,44 @@ function Sprites.new(player)
         }
     }
 
+    -- fall-low
+    self.fallLow = {
+        G = {
+            love.graphics.newImage("images/perso_images/fall-low/fl1-G.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl2-G.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl3-G.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl4-G.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl5-G.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl6-G.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl7-G.png"),
+        },
+        D = {
+            love.graphics.newImage("images/perso_images/fall-low/fl1-D.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl2-D.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl3-D.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl4-D.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl5-D.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl6-D.png"),
+            love.graphics.newImage("images/perso_images/fall-low/fl7-D.png"),
+        }
+    }
+
+    -- get-up-v
+    self.guv = {
+        G = {
+            love.graphics.newImage("images/perso_images/get-up-v/guv1-G.png"),
+            love.graphics.newImage("images/perso_images/get-up-v/guv2-G.png"),
+            love.graphics.newImage("images/perso_images/get-up-v/guv3-G.png"),
+            love.graphics.newImage("images/perso_images/get-up-v/guv4-G.png"),
+        },
+        D = {
+            love.graphics.newImage("images/perso_images/get-up-v/guv1-D.png"),
+            love.graphics.newImage("images/perso_images/get-up-v/guv2-D.png"),
+            love.graphics.newImage("images/perso_images/get-up-v/guv3-D.png"),
+            love.graphics.newImage("images/perso_images/get-up-v/guv4-D.png"),
+        }
+    }
+
     return self
 end
 
@@ -300,6 +341,10 @@ function Sprites:getCurrentSprite()
             local frames = self.rollFrames[p.side]
             sprite = frames[#frames - p.animation.currentFrame + 1]
         end
+    elseif p.animation.isguving then
+        sprite = safeFrame(self.guv[p.side])
+    elseif p.thrown then
+        sprite = safeFrame(self.fallLow[p.side])
     elseif p.animation.isJumping then
         sprite = safeFrame(p.jumpFrames and p.jumpFrames[p.side])
     elseif p.isBlocking then
@@ -346,6 +391,8 @@ function Sprites:getCurrentSprite()
     elseif p.animation.isWalking then
         local frames = (p.animation.walkType=="forward") and p.walkForwardFrames[p.side] or p.walkBackwardFrames[p.side]
         sprite = safeFrame(frames)
+    elseif p.gameOver then
+        sprite = (p.side=="G") and self.KOG or self.KOD
     else
         sprite = (p.side=="G") and self.poseG or self.poseD
     end

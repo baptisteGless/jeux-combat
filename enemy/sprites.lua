@@ -11,6 +11,9 @@ function Sprites.new(enemy)
     self.poseBasG = love.graphics.newImage("images/perso_images/poseBAS-G.png")
     self.poseBasD = love.graphics.newImage("images/perso_images/poseBAS-D.png")
 
+    self.KOG = love.graphics.newImage("images/perso_images/KO/KO-G.png")
+    self.KOD = love.graphics.newImage("images/perso_images/KO/KO-D.png")
+
     self.blockHautG = love.graphics.newImage("images/perso_images/blockHAUT-G.png")
     self.blockHautD = love.graphics.newImage("images/perso_images/blockHAUT-D.png")
     self.blockBasG  = love.graphics.newImage("images/perso_images/blockBAS-G.png")
@@ -370,6 +373,8 @@ function Sprites:getCurrentSprite()
     elseif e.animation.isWalking then
         local frames = (e.animation.walkType=="forward") and e.walkForwardFrames[e.side] or e.walkBackwardFrames[e.side]
         sprite = safeFrame(frames)
+    elseif e.gameOver then
+        sprite = (e.side=="G") and self.KOG or self.KOD
     else
         sprite = (e.side=="G") and self.poseG or self.poseD
     end

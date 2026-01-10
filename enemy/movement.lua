@@ -141,10 +141,17 @@ function Movement:update(dt)
     -- if e.isInShopSequence then
     --     return
     -- end
+    if e.gameOver then
+        return
+    end
+    if e.isKO then
+        -- laisser tomber / glisser
+        e.fall = true
+        e.state = true
+    end
     -- addDebugLog("e.isShopReactioning=" .. tostring(e.isShopReactioning))
     if e.isShopReactioning then
         e.shopReactionTimer = e.shopReactionTimer - dt
-
         if e.shopReactionTimer <= 0 then
             e.animation:endSR()
             e.isShopReactioning = false
@@ -203,7 +210,6 @@ function Movement:update(dt)
 
         -- === IMPACT SOL AU MILIEU DE LA CHUTE ===
         if not e.sandImpactDone and e.thrownTimer <= (e.thrownDuration / 2) + 0.2 then
-            local fx = e.fx
             local baseX = e.x + e.width / 2
             local offsetX = (e.throwDirection == -1) and -40 or 40
             local x = baseX + offsetX
@@ -225,8 +231,12 @@ function Movement:update(dt)
         -- AUCUNE AUTRE ACTION
         if e.thrownTimer <= 0 then
             e.thrown = false
-            e.isStunned = false
+            -- e.isStunned = false
             e.throwVelocity = 0
+            if e.isKO then
+                e.gameOver = true
+                return
+            end
             e.isGettingUp = true
             e.guvTimer = e.guvDuration
             e.animation:startguv()
@@ -262,6 +272,12 @@ function Movement:update(dt)
             e.hitTimer = 0
             e.state = false
             e.animation:endbbh()
+            -- if e.isKO then
+            --     addDebugLog("isKO bas")
+            --     e.fall = true
+            --     e.state = true
+            --     return
+            -- end
         end
         return
     end
@@ -276,6 +292,12 @@ function Movement:update(dt)
             e.hitTimer = 0
             e.state = false
             e.animation:endbhh()
+            -- if e.isKO then
+            --     addDebugLog("isKO haut")
+            --     e.fall = true
+            --     e.state = true
+            --     return
+            -- end
         end
         return
     end
@@ -293,9 +315,13 @@ function Movement:update(dt)
     end
 
     if e.state and not e.isRolling and not e.animation.isBBHing and not e.animation.isBHHing then
-        
+        -- addDebugLog("e.fall =" .. tostring(e.fall))
+        -- addDebugLog("e.thrown =" .. tostring(e.thrown))
         -- if e.compteHit >= e.limiteHit and not e.thrown then
         if e.fall and not e.thrown then
+            if e.hitType == 1 or e.hitType == 2 or e.hitType == 4 or e.hitType == 6 or e.hitType == 8 then
+                e:spawnHitFX(e.hitType) 
+            end
             e.sandImpactDone = false
             e.fall = false
             e.thrown = true
@@ -345,7 +371,11 @@ function Movement:update(dt)
                 e.isBlocking = false
                 e.isCrouching = false
                 e.state = false  
+                e:takeDamage(10, "bas")
                 e.animation:startbbh()
+                if e.hitType == 1 or e.hitType == 2 or e.hitType == 4 or e.hitType == 6 or e.hitType == 8 then
+                    e:spawnHitFX(e.hitType) 
+                end
             end
             return
         end
@@ -360,7 +390,11 @@ function Movement:update(dt)
                 -- e.compteHit = e.compteHit + 1
                 e.bhhTimer = e.bhhDuration
                 e.state = false  
+                e:takeDamage(15, "haut")
                 e.animation:startbhh()
+                if e.hitType == 1 or e.hitType == 2 or e.hitType == 4 or e.hitType == 6 or e.hitType == 8 then
+                    e:spawnHitFX(e.hitType) 
+                end
             end
             return
         end
