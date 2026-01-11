@@ -223,10 +223,10 @@ function Player.new(x, y, target)
 
     -- Parry
     self.parryWindow = 0
-    self.parryDuration = 0.25
+    self.parryDuration = 0.5
 
     -- healthbar
-    self.maxHp = 100
+    self.maxHp = 1000
     self.hp = self.maxHp
     self.isKO = false
     self.gameOver = false
@@ -261,6 +261,9 @@ function Player:spawnHitFX(type)
 
     local framesfall = fx.hitFramesfall[side]
     if not framesfall then return end
+
+    local framessparkle = fx.sparkleFrames[side]
+    if not framessparkle then return end
 
     local scale = 0.5
 
@@ -360,6 +363,26 @@ function Player:spawnHitFX(type)
         frames = framesfall
         scale = 0.2
         frameDuration = 0.08
+    elseif type == 11 then
+        y  = self.y + self.height * 0.35
+        if side == "G" then
+            baseX = baseX - 20
+        else
+            baseX = baseX + 20
+        end
+        frames = framessparkle
+        scale = 0.5
+        frameDuration = 0.02
+    elseif type == 12 then
+        y  = self.y + self.height * 0.75
+        if side == "G" then
+            baseX = baseX - 20
+        else
+            baseX = baseX + 20
+        end
+        frames = framessparkle
+        scale = 0.5
+        frameDuration = 0.02
     end
 
     table.insert(

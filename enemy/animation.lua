@@ -423,8 +423,21 @@ function Animation:update(dt)
         local newFrame = math.floor(self.frameTimer / frameTime) + 1
         if newFrame ~= self.currentFrame and newFrame <= #shopReaction then
             self.currentFrame = newFrame
+            -- Déclenchement sur la frame 4
+            if self.currentFrame == 4 then
+                e:takeDamage(3, "haut")
+            end
+            -- Déclenchement sur la frame 7
+            if self.currentFrame == 7 then
+                e:takeDamage(3, "haut")
+            end
+            -- Déclenchement sur la frame 10
+            if self.currentFrame == 10 then
+                e:takeDamage(3, "haut")
+            end
             -- Déclenchement sur la frame 14
             if self.currentFrame == 14 then
+                e:takeDamage(6, "haut")
                 e:spawnHitFX(10)
             end
         end

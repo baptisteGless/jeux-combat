@@ -70,6 +70,29 @@ local hitFramesfall = {
     }
 }
 
+local sparkleFrames = {
+    G = {
+        love.graphics.newImage("images/effet/sparkle-effect/sparkle-1-G.png"),
+        love.graphics.newImage("images/effet/sparkle-effect/sparkle-2-G.png"),
+        love.graphics.newImage("images/effet/sparkle-effect/sparkle-3-G.png"),
+        love.graphics.newImage("images/effet/sparkle-effect/sparkle-4-G.png"),
+        love.graphics.newImage("images/effet/sparkle-effect/sparkle-5-G.png"),
+        love.graphics.newImage("images/effet/sparkle-effect/sparkle-6-G.png"),
+        love.graphics.newImage("images/effet/sparkle-effect/sparkle-7-G.png"),
+        love.graphics.newImage("images/effet/sparkle-effect/sparkle-8-G.png"),
+    },
+    D = {
+        love.graphics.newImage("images/effet/sparkle-effect/sparkle-1-D.png"),
+        love.graphics.newImage("images/effet/sparkle-effect/sparkle-2-D.png"),
+        love.graphics.newImage("images/effet/sparkle-effect/sparkle-3-D.png"),
+        love.graphics.newImage("images/effet/sparkle-effect/sparkle-4-D.png"),
+        love.graphics.newImage("images/effet/sparkle-effect/sparkle-5-D.png"),
+        love.graphics.newImage("images/effet/sparkle-effect/sparkle-6-D.png"),
+        love.graphics.newImage("images/effet/sparkle-effect/sparkle-7-D.png"),
+        love.graphics.newImage("images/effet/sparkle-effect/sparkle-8-D.png"),
+    }
+}
+
 function checkCollision(a, b)
     return a.x < b.x + b.width and
            a.x + a.width > b.x and
@@ -111,9 +134,11 @@ function love.load()
 
     enemy.fx.hitFrames = hitFrames
     enemy.fx.hitFramesfall = hitFramesfall
+    enemy.fx.sparkleFrames = sparkleFrames
     enemy.fx.HitFX = HitFX
     player.fx.hitFrames = hitFrames
     player.fx.hitFramesfall = hitFramesfall
+    player.fx.sparkleFrames = sparkleFrames
     player.fx.HitFX = HitFX
 
     player.fx.sandFrames = sandFrames

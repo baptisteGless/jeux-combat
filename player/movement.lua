@@ -371,7 +371,7 @@ function Movement:update(dt)
 
             if p.parryWindow > 0 and p.isBlocking and p.isCrouching then
                 local e = p.target
-                addDebugLog("Parry BAS")
+                p:spawnHitFX(12) 
                 e.isDeflect = true
                 p.parryWindow = 0
                 p.state = false
@@ -386,6 +386,7 @@ function Movement:update(dt)
                 p.isCrouching = false
                 p.state = false  
                 p.animation:endBasSlash()
+                p:takeDamage(10, "bas")
                 p.animation:startBBH()
                 if p.hitType == 1 or p.hitType == 2 or p.hitType == 4 or p.hitType == 6 or p.hitType == 8 then
                     p:spawnHitFX(p.hitType) 
@@ -399,7 +400,7 @@ function Movement:update(dt)
 
             if p.parryWindow > 0 and p.isBlocking and not p.isCrouching then
                 local e = p.target
-                addDebugLog("Parry HAUT")
+                p:spawnHitFX(11) 
                 e.isDeflect = true
                 p.parryWindow = 0
                 p.state = false
@@ -412,6 +413,7 @@ function Movement:update(dt)
                 -- p.isCrouching = false
                 p.bhhTimer = p.bhhDuration
                 p.state = false  
+                p:takeDamage(15, "haut")
                 p.animation:endBasSlash()
                 p.animation:startBHH()
                 if p.hitType == 1 or p.hitType == 2 or p.hitType == 4 or p.hitType == 6 or p.hitType == 8 then
