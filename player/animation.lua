@@ -707,6 +707,11 @@ function Animation:update(dt)
         local newFrame = math.floor(self.frameTimer / frameTime) + 1
         if newFrame ~= self.currentFrame and newFrame <= #shopSuccessFrames then
             self.currentFrame = newFrame
+            -- Déclenchement sur la frame 14
+            p.camShake = false
+            if self.currentFrame == 14 then
+                p.camShake = true
+            end
         end
 
         return

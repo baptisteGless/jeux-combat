@@ -1,6 +1,7 @@
 local Player = require("player")  -- ça charge player/init.lua automatiquement
 local Enemy = require("enemy")    -- ça charge enemy/init.lua automatiquement
 local HealthBar = require("healthbar") -- les bar de vie des 2 personnages
+local Camera = require("camera")  -- le systeme de camera shaking
 
 debugLog = ""
 local MAX_DEBUG_LINES = 10
@@ -32,24 +33,12 @@ local HitFX = require("hitFX")
 
 local hitFrames = {
     G = {
-        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-1-G.png"),
-        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-2-G.png"),
-        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-3-G.png"),
-        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-4-G.png"),
-        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-5-G.png"),
-        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-6-G.png"),
         love.graphics.newImage("images/effet/blood-effect/blood-boom-1-G.png"),
         love.graphics.newImage("images/effet/blood-effect/blood-boom-2-G.png"),
         love.graphics.newImage("images/effet/blood-effect/blood-boom-3-G.png"),
         love.graphics.newImage("images/effet/blood-effect/blood-boom-4-G.png"),
     },
     D = {
-        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-1-D.png"),
-        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-2-D.png"),
-        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-3-D.png"),
-        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-4-D.png"),
-        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-5-D.png"),
-        -- love.graphics.newImage("images/effet/blood-effect/blood-effect-6-D.png"),
         love.graphics.newImage("images/effet/blood-effect/blood-boom-1-D.png"),
         love.graphics.newImage("images/effet/blood-effect/blood-boom-2-D.png"),
         love.graphics.newImage("images/effet/blood-effect/blood-boom-3-D.png"),
@@ -167,12 +156,18 @@ function love.load()
         barHeight,
         enemy
     )
+
+    camera = Camera:new()
+
 end
 
 function love.update(dt)
     -- Mise à jour du joueur et de l’ennemi
     player:update(dt, enemy)
     enemy:update(dt, player)
+
+    -- Mise à jour de la camera
+    camera:update(dt)
 
     -- Gestion orientation (tu peux l’intégrer dans update si tu veux)
     player:updateOrientation(enemy)
@@ -187,6 +182,9 @@ function love.update(dt)
         player.hitTimer = 0
         player.fall = atkennemy.fall
     end
+    if player.camShake then
+        camera:shake(0.25, 5)
+    end
     if atk then
         enemy.hitType = atk.hitType
         enemy.directionatk = atk.type
@@ -197,9 +195,15 @@ function love.update(dt)
         enemy.fall = atk.fall
         enemy.hitJustReceived = true
     end
+    if enemy.camShake then
+        camera:shake(0.25, 5)
+    end
 end
 
 function love.draw()
+
+    camera:apply()
+
     -- Dessiner le background redimensionné
     love.graphics.draw(
         background,
@@ -211,6 +215,9 @@ function love.draw()
     -- Dessiner le joueur et l’ennemi
     player:draw()
     enemy:draw()
+
+    camera:clear()
+
     -- HUD
     playerHealthBar:draw()
     enemyHealthBar:draw()

@@ -136,6 +136,7 @@ end
 
 function Movement:update(dt)
     local e = self.enemy
+    e.camShake = false
     -- addDebugLog("e.compteHit" .. tostring(e.compteHit))
 
     -- if e.isInShopSequence then
@@ -151,6 +152,7 @@ function Movement:update(dt)
     end
     -- addDebugLog("e.isShopReactioning=" .. tostring(e.isShopReactioning))
     if e.isShopReactioning then
+        e.isCrouching = false
         e.shopReactionTimer = e.shopReactionTimer - dt
         if e.shopReactionTimer <= 0 then
             e.animation:endSR()
@@ -190,6 +192,7 @@ function Movement:update(dt)
     end
 
     if e.thrown then
+        -- e.camShake = false
         e.thrownTimer = e.thrownTimer - dt
 
         -- déplacement
@@ -319,44 +322,122 @@ function Movement:update(dt)
         -- addDebugLog("e.thrown =" .. tostring(e.thrown))
         -- if e.compteHit >= e.limiteHit and not e.thrown then
         if e.fall and not e.thrown then
-            if e.hitType == 1 or e.hitType == 2 or e.hitType == 4 or e.hitType == 6 or e.hitType == 8 then
+            if (e.hitType == 6 or e.hitType == 8) and not e.isCrouching and not e.isBlocking then
                 e:spawnHitFX(e.hitType) 
+                e.camShake = true
+                -- e.camShake = true
+                e.sandImpactDone = false
+                e.fall = false
+                e.thrown = true
+                e.thrownTimer = e.thrownDuration
+
+                -- direction opposée au joueur
+                local p = e.target
+                e.throwDirection = (e.x < p.x) and -1 or 1
+
+                -- distance variable selon position écran
+                local screenW = love.graphics.getWidth()
+                local distToEdge
+
+                if e.throwDirection == -1 then
+                    distToEdge = e.x
+                else
+                    distToEdge = screenW - (e.x + e.width)
+                end
+
+                -- puissance proportionnelle à l’espace dispo
+                local maxThrow = 620
+                local minThrow = 220
+                local factor = math.min(distToEdge / 200, 1)
+
+                e.throwVelocity = minThrow + (maxThrow - minThrow) * factor
+
+                -- hard lock
+                e.isStunned = true
+                e.state = false
+                e.directionatk = "idle"
+                e.moveQueue = {}
+                e.rollRequested = false
+                e.wantMove = 0
+
+                return
+            elseif e.hitType == "12" then
+                -- e:spawnHitFX(8) 
+                -- e.camShake = true
+                e.sandImpactDone = false
+                e.fall = false
+                e.thrown = true
+                e.thrownTimer = e.thrownDuration
+
+                -- direction opposée au joueur
+                local p = e.target
+                e.throwDirection = (e.x < p.x) and -1 or 1
+
+                -- distance variable selon position écran
+                local screenW = love.graphics.getWidth()
+                local distToEdge
+
+                if e.throwDirection == -1 then
+                    distToEdge = e.x
+                else
+                    distToEdge = screenW - (e.x + e.width)
+                end
+
+                -- puissance proportionnelle à l’espace dispo
+                local maxThrow = 620
+                local minThrow = 220
+                local factor = math.min(distToEdge / 200, 1)
+
+                e.throwVelocity = minThrow + (maxThrow - minThrow) * factor
+
+                -- hard lock
+                e.isStunned = true
+                e.state = false
+                e.directionatk = "idle"
+                e.moveQueue = {}
+                e.rollRequested = false
+                e.wantMove = 0
+
+                return
+            elseif e.isKO then
+                -- e:spawnHitFX(8) 
+                -- e.camShake = true
+                e.sandImpactDone = false
+                e.fall = false
+                e.thrown = true
+                e.thrownTimer = e.thrownDuration
+
+                -- direction opposée au joueur
+                local p = e.target
+                e.throwDirection = (e.x < p.x) and -1 or 1
+
+                -- distance variable selon position écran
+                local screenW = love.graphics.getWidth()
+                local distToEdge
+
+                if e.throwDirection == -1 then
+                    distToEdge = e.x
+                else
+                    distToEdge = screenW - (e.x + e.width)
+                end
+
+                -- puissance proportionnelle à l’espace dispo
+                local maxThrow = 620
+                local minThrow = 220
+                local factor = math.min(distToEdge / 200, 1)
+
+                e.throwVelocity = minThrow + (maxThrow - minThrow) * factor
+
+                -- hard lock
+                e.isStunned = true
+                e.state = false
+                e.directionatk = "idle"
+                e.moveQueue = {}
+                e.rollRequested = false
+                e.wantMove = 0
+
+                return
             end
-            e.sandImpactDone = false
-            e.fall = false
-            e.thrown = true
-            e.thrownTimer = e.thrownDuration
-
-            -- direction opposée au joueur
-            local p = e.target
-            e.throwDirection = (e.x < p.x) and -1 or 1
-
-            -- distance variable selon position écran
-            local screenW = love.graphics.getWidth()
-            local distToEdge
-
-            if e.throwDirection == -1 then
-                distToEdge = e.x
-            else
-                distToEdge = screenW - (e.x + e.width)
-            end
-
-            -- puissance proportionnelle à l’espace dispo
-            local maxThrow = 620
-            local minThrow = 220
-            local factor = math.min(distToEdge / 200, 1)
-
-            e.throwVelocity = minThrow + (maxThrow - minThrow) * factor
-
-            -- hard lock
-            e.isStunned = true
-            e.state = false
-            e.directionatk = "idle"
-            e.moveQueue = {}
-            e.rollRequested = false
-            e.wantMove = 0
-
-            return
         end
 
         -- COUP BAS
@@ -383,8 +464,7 @@ function Movement:update(dt)
         -- COUP HAUT
         if e.directionatk == "hitHaut" then
             -- bloqué SEULEMENT si block debout
-            if not (e.isBlocking and not e.isCrouching) then
-                -- addDebugLog("+++hitHaut+++")
+            if not e.isBlocking and not e.isCrouching then
                 e.isStunned = true
                 e.moveQueue = {}
                 -- e.compteHit = e.compteHit + 1

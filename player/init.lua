@@ -225,8 +225,11 @@ function Player.new(x, y, target)
     self.parryWindow = 0
     self.parryDuration = 0.5
 
+    -- camera
+    self.camShake = false
+
     -- healthbar
-    self.maxHp = 1000
+    self.maxHp = 100
     self.hp = self.maxHp
     self.isKO = false
     self.gameOver = false

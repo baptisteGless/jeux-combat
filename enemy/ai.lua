@@ -126,7 +126,7 @@ function AI:update(dt)
 
     -- if stopTest then return end
     
-    if e.isGettingUp or e.thrown then
+    if e.isGettingUp or e.thrown or e.isShopReactioning then
         return
     end
 
@@ -193,6 +193,7 @@ function AI:update(dt)
             e.wantBlock = nil
         else
             e.isBlocking = true
+            e.wantBlock = "haut"
         end
         e.blockType = e.wantBlock
         return
@@ -205,6 +206,7 @@ function AI:update(dt)
             e.wantBlock = nil
         else
             e.isBlocking = true
+            e.wantBlock = "bas"
         end
         e.blockType = e.wantBlock
         return

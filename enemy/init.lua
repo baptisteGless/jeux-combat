@@ -190,8 +190,11 @@ function Enemy.new(x, y, target)
     self.sprites = Sprites.new(self)
     self.collision = Collision.new(self)
 
+    -- camera
+    self.camShake = false
+
     -- healthbar
-    self.maxHp = 1000
+    self.maxHp = 100
     self.hp = self.maxHp
     self.isKO = false
     self.gameOver = false

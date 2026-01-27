@@ -189,6 +189,7 @@ end
 
 function Movement:update(dt)
     local p = self.player
+    p.camShake = false
 
     if p.gameOver then
         return
@@ -217,6 +218,7 @@ function Movement:update(dt)
     end
 
     if p.thrown then
+        -- p.camShake = false
         p.thrownTimer = p.thrownTimer - dt
 
         -- déplacement
@@ -323,11 +325,48 @@ function Movement:update(dt)
     -- addDebugLog("p.state=" .. tostring((p.state)))
     if p.state and not p.isRolling and not p.animation.isBBHingand and not p.animation.isBHHing and p.isOnGround then
 
-        if p.fall and not p.thrown and not p.isBlocking then
-            if (p.hitType == 6 or p.hitType == 8) and not p.isCrouching then
-                if p.hitType == 1 or p.hitType == 2 or p.hitType == 4 or p.hitType == 6 or p.hitType == 8 then
-                    p:spawnHitFX(p.hitType) 
+        if p.fall and not p.thrown then
+            if (p.hitType == 6 or p.hitType == 8) and not p.isCrouching and not p.isBlocking then
+                p:spawnHitFX(p.hitType)
+                p.camShake = true
+                -- p.camShake = true
+                p.sandImpactDone = false
+                p.fall = false
+                p.thrown = true
+                p.thrownTimer = p.thrownDuration
+
+                -- direction opposée au joueur
+                local e = p.target
+                p.throwDirection = (p.x < e.x) and -1 or 1
+
+                -- distance variable selon position écran
+                local screenW = love.graphics.getWidth()
+                local distToEdge
+
+                if p.throwDirection == -1 then
+                    distToEdge = p.x
+                else
+                    distToEdge = screenW - (p.x + p.width)
                 end
+
+                -- puissance proportionnelle à l’espace dispo
+                local maxThrow = 620
+                local minThrow = 220
+                local factor = math.min(distToEdge / 200, 1)
+
+                p.throwVelocity = minThrow + (maxThrow - minThrow) * factor
+
+                -- hard lock
+                p.isStunned = true
+                p.state = false
+                p.directionatk = "idle"
+                p.moveQueue = {}
+                p.rollRequested = false
+                p.wantMove = 0
+
+                return
+            elseif p.isKO then
+                -- p.camShake = true
                 p.sandImpactDone = false
                 p.fall = false
                 p.thrown = true
@@ -452,9 +491,11 @@ function Movement:update(dt)
                 p.animation:startShopSuccess()
 
                 -- ENEMY ENTRE EN SHOP REACTION
+                e.isCrouching = false
                 e.isInShopSequence = true
                 e.isShopReactioning = true
                 e.shopReactionTimer = e.shopReactionDuration
+                e.hitType = "12"
                 e.animation:startSR()
             else
                 -- SHOP FAIL
