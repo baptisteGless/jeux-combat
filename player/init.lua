@@ -78,7 +78,7 @@ function Player.new(x, y, target)
 
     self.isOnGround = true
 
-    self.side = "G" -- orientation par défaut (G = gauche, D = droite)
+    self.side = "D" -- orientation par défaut (G = gauche, D = droite)
 
     -- Table de combos
     self.comboDefinitions = {

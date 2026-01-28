@@ -1,306 +1,39 @@
 -- enemy/sprites.lua
+local Assets = require("assets")
+
 local Sprites = {}
 Sprites.__index = Sprites
 
 function Sprites.new(enemy)
     local self = setmetatable({}, Sprites)
     self.enemy = enemy
-    self.logoID = love.graphics.newImage("images/logo_id/romain.png")
-    self.poseG = love.graphics.newImage("images/perso_images/pose-G.png")
-    self.poseD = love.graphics.newImage("images/perso_images/pose-D.png")
-    self.poseBasG = love.graphics.newImage("images/perso_images/poseBAS-G.png")
-    self.poseBasD = love.graphics.newImage("images/perso_images/poseBAS-D.png")
-
-    self.KOG = love.graphics.newImage("images/perso_images/KO/KO-G.png")
-    self.KOD = love.graphics.newImage("images/perso_images/KO/KO-D.png")
-
-    self.blockHautG = love.graphics.newImage("images/perso_images/blockHAUT-G.png")
-    self.blockHautD = love.graphics.newImage("images/perso_images/blockHAUT-D.png")
-    self.blockBasG  = love.graphics.newImage("images/perso_images/blockBAS-G.png")
-    self.blockBasD  = love.graphics.newImage("images/perso_images/blockBAS-D.png")
-
-    -- roll
-    self.rollFrames = {
-        G = {
-            love.graphics.newImage("images/perso_images/roll/roll1-G.png"),
-            love.graphics.newImage("images/perso_images/roll/roll2-G.png"),
-            love.graphics.newImage("images/perso_images/roll/roll3-G.png"),
-            love.graphics.newImage("images/perso_images/roll/roll4-G.png"),
-            love.graphics.newImage("images/perso_images/roll/roll5-G.png"),
-            love.graphics.newImage("images/perso_images/roll/roll6-G.png"),
-        },
-        D = {
-            love.graphics.newImage("images/perso_images/roll/roll1-D.png"),
-            love.graphics.newImage("images/perso_images/roll/roll2-D.png"),
-            love.graphics.newImage("images/perso_images/roll/roll3-D.png"),
-            love.graphics.newImage("images/perso_images/roll/roll4-D.png"),
-            love.graphics.newImage("images/perso_images/roll/roll5-D.png"),
-            love.graphics.newImage("images/perso_images/roll/roll6-D.png"),
-        }
-    }
-    -- punch
-    self.punchFrames = {
-        G = {
-            love.graphics.newImage("images/perso_images/punch/punch1-G.png"),
-            love.graphics.newImage("images/perso_images/punch/punch2-G.png"),
-            love.graphics.newImage("images/perso_images/punch/punch3-G.png"),
-            love.graphics.newImage("images/perso_images/punch/punch4-G.png"),
-        },
-        D = {
-            love.graphics.newImage("images/perso_images/punch/punch1-D.png"),
-            love.graphics.newImage("images/perso_images/punch/punch2-D.png"),
-            love.graphics.newImage("images/perso_images/punch/punch3-D.png"),
-            love.graphics.newImage("images/perso_images/punch/punch4-D.png"),
-        }
-    }
-    -- bas-slash
-    self.basSlashFrames = {
-        G = {
-            love.graphics.newImage("images/perso_images/bas-slash/basS1-G.png"),
-            love.graphics.newImage("images/perso_images/bas-slash/basS2-G.png"),
-            love.graphics.newImage("images/perso_images/bas-slash/basS3-G.png"),
-            love.graphics.newImage("images/perso_images/bas-slash/basS4-G.png"),
-        },
-        D = {
-            love.graphics.newImage("images/perso_images/bas-slash/basS1-D.png"),
-            love.graphics.newImage("images/perso_images/bas-slash/basS2-D.png"),
-            love.graphics.newImage("images/perso_images/bas-slash/basS3-D.png"),
-            love.graphics.newImage("images/perso_images/bas-slash/basS4-D.png"),
-        }
-    }
-    -- low-slash
-    self.lowSlashFrames = {
-        G = {
-            love.graphics.newImage("images/perso_images/low-slash/ls1-G.png"),
-            love.graphics.newImage("images/perso_images/low-slash/ls2-G.png"),
-            love.graphics.newImage("images/perso_images/low-slash/ls3-G.png"),
-            love.graphics.newImage("images/perso_images/low-slash/ls4-G.png"),
-        },
-        D = {
-            love.graphics.newImage("images/perso_images/low-slash/ls1-D.png"),
-            love.graphics.newImage("images/perso_images/low-slash/ls2-D.png"),
-            love.graphics.newImage("images/perso_images/low-slash/ls3-D.png"),
-            love.graphics.newImage("images/perso_images/low-slash/ls4-D.png"),
-        }
-    }
-
-    -- low-kick
-    self.lowKickFrames = {
-        G = {
-            love.graphics.newImage("images/perso_images/low-kick/lk1-G.png"),
-            love.graphics.newImage("images/perso_images/low-kick/lk2-G.png"),
-            love.graphics.newImage("images/perso_images/low-kick/lk3-G.png"),
-            love.graphics.newImage("images/perso_images/low-kick/lk4-G.png"),
-        },
-        D = {
-            love.graphics.newImage("images/perso_images/low-kick/lk1-D.png"),
-            love.graphics.newImage("images/perso_images/low-kick/lk2-D.png"),
-            love.graphics.newImage("images/perso_images/low-kick/lk3-D.png"),
-            love.graphics.newImage("images/perso_images/low-kick/lk4-D.png"),
-        }
-    }
-
-    -- knee
-    self.kneeFrames = {
-        G = {
-            love.graphics.newImage("images/perso_images/knee/knee1-G.png"),
-            love.graphics.newImage("images/perso_images/knee/knee2-G.png"),
-            love.graphics.newImage("images/perso_images/knee/knee3-G.png"),
-            love.graphics.newImage("images/perso_images/knee/knee4-G.png"),
-        },
-        D = {
-            love.graphics.newImage("images/perso_images/knee/knee1-D.png"),
-            love.graphics.newImage("images/perso_images/knee/knee2-D.png"),
-            love.graphics.newImage("images/perso_images/knee/knee3-D.png"),
-            love.graphics.newImage("images/perso_images/knee/knee4-D.png"),
-        }
-    }
-
-    -- kick
-    self.kickFrames = {
-        G = {
-            love.graphics.newImage("images/perso_images/kick/kick1-G.png"),
-            love.graphics.newImage("images/perso_images/kick/kick2-G.png"),
-            love.graphics.newImage("images/perso_images/kick/kick3-G.png"),
-            love.graphics.newImage("images/perso_images/kick/kick4-G.png"),
-        },
-        D = {
-            love.graphics.newImage("images/perso_images/kick/kick1-D.png"),
-            love.graphics.newImage("images/perso_images/kick/kick2-D.png"),
-            love.graphics.newImage("images/perso_images/kick/kick3-D.png"),
-            love.graphics.newImage("images/perso_images/kick/kick4-D.png"),
-        }
-    }
-
-    -- hit1
-    self.hit1Frames = {
-        G = {
-            love.graphics.newImage("images/perso_images/hit1/hit1-G.png"),
-            love.graphics.newImage("images/perso_images/hit1/hit2-G.png"),
-            love.graphics.newImage("images/perso_images/hit1/hit3-G.png"),
-            love.graphics.newImage("images/perso_images/hit1/hit4-G.png"),
-        },
-        D = {
-            love.graphics.newImage("images/perso_images/hit1/hit1-D.png"),
-            love.graphics.newImage("images/perso_images/hit1/hit2-D.png"),
-            love.graphics.newImage("images/perso_images/hit1/hit3-D.png"),
-            love.graphics.newImage("images/perso_images/hit1/hit4-D.png"),
-        }
-    }
-    
-    -- heavy-slash
-    self.heavySlashFrames = {
-        G = {
-            love.graphics.newImage("images/perso_images/heavy-slash/hs1-G.png"),
-            love.graphics.newImage("images/perso_images/heavy-slash/hs2-G.png"),
-            love.graphics.newImage("images/perso_images/heavy-slash/hs3-G.png"),
-            love.graphics.newImage("images/perso_images/heavy-slash/hs4-G.png"),
-            love.graphics.newImage("images/perso_images/heavy-slash/hs5-G.png"),
-        },
-        D = {
-            love.graphics.newImage("images/perso_images/heavy-slash/hs1-D.png"),
-            love.graphics.newImage("images/perso_images/heavy-slash/hs2-D.png"),
-            love.graphics.newImage("images/perso_images/heavy-slash/hs3-D.png"),
-            love.graphics.newImage("images/perso_images/heavy-slash/hs4-D.png"),
-            love.graphics.newImage("images/perso_images/heavy-slash/hs5-D.png"),
-        }
-    }
-
-    -- big-slash
-    self.bigSlashFrames = {
-        G = {
-            love.graphics.newImage("images/perso_images/big-slash/bs1-G.png"),
-            love.graphics.newImage("images/perso_images/big-slash/bs2-G.png"),
-            love.graphics.newImage("images/perso_images/big-slash/bs3-G.png"),
-            love.graphics.newImage("images/perso_images/big-slash/bs4-G.png"),
-            love.graphics.newImage("images/perso_images/big-slash/bs5-G.png"),
-            love.graphics.newImage("images/perso_images/big-slash/bs6-G.png"),
-            love.graphics.newImage("images/perso_images/big-slash/bs7-G.png"),
-        },
-        D = {
-            love.graphics.newImage("images/perso_images/big-slash/bs1-D.png"),
-            love.graphics.newImage("images/perso_images/big-slash/bs2-D.png"),
-            love.graphics.newImage("images/perso_images/big-slash/bs3-D.png"),
-            love.graphics.newImage("images/perso_images/big-slash/bs4-D.png"),
-            love.graphics.newImage("images/perso_images/big-slash/bs5-D.png"),
-            love.graphics.newImage("images/perso_images/big-slash/bs6-D.png"),
-            love.graphics.newImage("images/perso_images/big-slash/bs7-D.png"),
-        }
-    }
-
-    -- shop
-    self.shopFrames = {
-        G = {
-            love.graphics.newImage("images/perso_images/shop/shop1-G.png"),
-            love.graphics.newImage("images/perso_images/shop/shop2-G.png"),
-            love.graphics.newImage("images/perso_images/shop/shop3-G.png"),
-            love.graphics.newImage("images/perso_images/shop/shop4-G.png"),
-        },
-        D = {
-            love.graphics.newImage("images/perso_images/shop/shop1-D.png"),
-            love.graphics.newImage("images/perso_images/shop/shop2-D.png"),
-            love.graphics.newImage("images/perso_images/shop/shop3-D.png"),
-            love.graphics.newImage("images/perso_images/shop/shop4-D.png"),
-        }
-    }
-
-    -- bad-bas-hit
-    self.bbhFrames = {
-        G = {
-            love.graphics.newImage("images/perso_images/bad-bas-hit/bbh1-G.png"),
-            love.graphics.newImage("images/perso_images/bad-bas-hit/bbh2-G.png"),
-        },
-        D = {
-            love.graphics.newImage("images/perso_images/bad-bas-hit/bbh1-D.png"),
-            love.graphics.newImage("images/perso_images/bad-bas-hit/bbh2-D.png"),
-        }
-    }
-
-    -- bad-haut-hit
-    self.bhhFrames = {
-        G = {
-            love.graphics.newImage("images/perso_images/bad-haut-hit/bhh1-G.png"),
-            love.graphics.newImage("images/perso_images/bad-haut-hit/bhh2-G.png"),
-        },
-        D = {
-            love.graphics.newImage("images/perso_images/bad-haut-hit/bhh1-D.png"),
-            love.graphics.newImage("images/perso_images/bad-haut-hit/bhh2-D.png"),
-        }
-    }
-
-    -- fall-low
-    self.fallLow = {
-        G = {
-            love.graphics.newImage("images/perso_images/fall-low/fl1-G.png"),
-            love.graphics.newImage("images/perso_images/fall-low/fl2-G.png"),
-            love.graphics.newImage("images/perso_images/fall-low/fl3-G.png"),
-            love.graphics.newImage("images/perso_images/fall-low/fl4-G.png"),
-            love.graphics.newImage("images/perso_images/fall-low/fl5-G.png"),
-            love.graphics.newImage("images/perso_images/fall-low/fl6-G.png"),
-            love.graphics.newImage("images/perso_images/fall-low/fl7-G.png"),
-        },
-        D = {
-            love.graphics.newImage("images/perso_images/fall-low/fl1-D.png"),
-            love.graphics.newImage("images/perso_images/fall-low/fl2-D.png"),
-            love.graphics.newImage("images/perso_images/fall-low/fl3-D.png"),
-            love.graphics.newImage("images/perso_images/fall-low/fl4-D.png"),
-            love.graphics.newImage("images/perso_images/fall-low/fl5-D.png"),
-            love.graphics.newImage("images/perso_images/fall-low/fl6-D.png"),
-            love.graphics.newImage("images/perso_images/fall-low/fl7-D.png"),
-        }
-    }
-
-    -- get-up-v
-    self.guv = {
-        G = {
-            love.graphics.newImage("images/perso_images/get-up-v/guv1-G.png"),
-            love.graphics.newImage("images/perso_images/get-up-v/guv2-G.png"),
-            love.graphics.newImage("images/perso_images/get-up-v/guv3-G.png"),
-            love.graphics.newImage("images/perso_images/get-up-v/guv4-G.png"),
-        },
-        D = {
-            love.graphics.newImage("images/perso_images/get-up-v/guv1-D.png"),
-            love.graphics.newImage("images/perso_images/get-up-v/guv2-D.png"),
-            love.graphics.newImage("images/perso_images/get-up-v/guv3-D.png"),
-            love.graphics.newImage("images/perso_images/get-up-v/guv4-D.png"),
-        }
-    }
-
-    -- shop-reaction
-    self.shopReaction = {
-        G = {
-            love.graphics.newImage("images/perso_images/shop-reaction/sr1-G.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr2-G.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr3-G.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr4-G.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr5-G.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr6-G.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr7-G.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr8-G.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr9-G.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr10-G.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr11-G.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr12-G.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr13-G.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr14-G.png"),
-        },
-        D = {
-            love.graphics.newImage("images/perso_images/shop-reaction/sr1-D.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr2-D.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr3-D.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr4-D.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr5-D.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr6-D.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr7-D.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr8-D.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr9-D.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr10-D.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr11-D.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr12-D.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr13-D.png"),
-            love.graphics.newImage("images/perso_images/shop-reaction/sr14-D.png"),
-        }
-    }
+    self.logoID = Assets.images.enemyLogoId
+    self.poseG = Assets.images.poseG
+    self.poseD = Assets.images.poseD
+    self.poseBasG = Assets.images.poseBasG
+    self.poseBasD = Assets.images.poseBasD
+    self.KOG = Assets.images.KOG
+    self.KOD = Assets.images.KOD
+    self.blockHautG = Assets.images.blockHautG
+    self.blockHautD = Assets.images.blockHautD
+    self.blockBasG = Assets.images.blockBasG
+    self.blockBasD = Assets.images.blockBasD
+    self.rollFrames = Assets.images.roll
+    self.punchFrames = Assets.images.punchFrames
+    self.basSlashFrames = Assets.images.basSlashFrames
+    self.lowSlashFrames = Assets.images.lowSlashFrames
+    self.lowKickFrames = Assets.images.lowKickFrames
+    self.kneeFrames = Assets.images.kneeFrames
+    self.kickFrames = Assets.images.kickFrames
+    self.hit1Frames = Assets.images.hit1Frames
+    self.heavySlashFrames = Assets.images.heavySlashFrames
+    self.bigSlashFrames = Assets.images.bigSlashFrames
+    self.shopFrames = Assets.images.shopFrames
+    self.bbhFrames = Assets.images.bbhFrames
+    self.bhhFrames = Assets.images.bhhFrames
+    self.fallLow = Assets.images.fallLow
+    self.guv = Assets.images.guv
+    self.shopReaction = Assets.images.shopReaction
 
     return self
 end
@@ -381,7 +114,11 @@ function Sprites:getCurrentSprite()
 
     -- fallback
     if not sprite then
-        sprite = (e.side=="G") and self.poseG or self.poseD
+        if self.poseG then
+            sprite = (e.side=="G") and self.poseG or self.poseD
+        else
+            return nil
+        end
     end
 
     return sprite
@@ -418,6 +155,9 @@ Sprites.shopReactScaleMultipliers = {
 function Sprites:draw()
     local e = self.enemy
     local sprite = self:getCurrentSprite()
+    if not sprite then
+        return -- on dessine rien cette frame
+    end
 
     -- facteur de réduction quand accroupi
     local crouchScale = e.isCrouching and 0.7 or 1
@@ -474,6 +214,9 @@ function Sprites:draw()
             )
         end
     else
+        if not sprite or not sprite.getWidth then
+            return
+        end
         -- ancien comportement (pour les poses fixes qui sont juste des images)
         local w, h = sprite:getWidth(), sprite:getHeight()
         local scale = (e.height / h) * crouchScale * shopScale

@@ -2,85 +2,44 @@ local Player = require("player")  -- ça charge player/init.lua automatiquement
 local Enemy = require("enemy")    -- ça charge enemy/init.lua automatiquement
 local HealthBar = require("healthbar") -- les bar de vie des 2 personnages
 local Camera = require("camera")  -- le systeme de camera shaking
+local Assets = require("assets")
+
+local gameState = "menu" -- "menu" | "game"
+
+local initStep = 0
+local initDone = false
+
+local buttonScale = 0.5       -- réduit la taille des boutons à 50%
+local buttonSpacing = 40      -- espace vertical entre les boutons
+
+local menuButtons = {}
+local selectedButton = 1
+local buttonSpacing = 80 -- espace vertical entre les boutons
+screenWidth, screenHeight = love.graphics.getDimensions()
+local menuStartY = (screenHeight - (#menuButtons * buttonSpacing)) / 2
+
+local readyTimer = 0
+local READY_DURATION = 2.5 -- secondes
+local assetsToLoad = {}
+local assetsLoaded = 0
+local totalAssets = 0
+local loadingDone = false
+
+local goAlpha = 1         -- alpha actuel (1 = opaque, 0 = invisible)
+local goTimer = 0         -- timer pour l'affichage
+local GO_DURATION = 2     -- secondes pendant lesquelles "GO" est visible avant de disparaître
+local GO_FADE_DURATION = 0.5 -- durée de la disparition en secondes
 
 debugLog = ""
 local MAX_DEBUG_LINES = 10
 
--- ===== SAND FX =====
 local SandFX = require("sandFX")
-
-local sandFrames = {
-    G = {
-        love.graphics.newImage("images/effet/sand/sand-spred-1-G.png"),
-        love.graphics.newImage("images/effet/sand/sand-spred-2-G.png"),
-        love.graphics.newImage("images/effet/sand/sand-spred-3-G.png"),
-        love.graphics.newImage("images/effet/sand/sand-spred-4-G.png"),
-        love.graphics.newImage("images/effet/sand/sand-spred-5-G.png"),
-        love.graphics.newImage("images/effet/sand/sand-spred-6-G.png"),
-    },
-    D = {
-        love.graphics.newImage("images/effet/sand/sand-spred-1-D.png"),
-        love.graphics.newImage("images/effet/sand/sand-spred-2-D.png"),
-        love.graphics.newImage("images/effet/sand/sand-spred-3-D.png"),
-        love.graphics.newImage("images/effet/sand/sand-spred-4-D.png"),
-        love.graphics.newImage("images/effet/sand/sand-spred-5-D.png"),
-        love.graphics.newImage("images/effet/sand/sand-spred-6-D.png"),
-    }
-}
-
--- ===== HIT FX =====
 local HitFX = require("hitFX")
 
-local hitFrames = {
-    G = {
-        love.graphics.newImage("images/effet/blood-effect/blood-boom-1-G.png"),
-        love.graphics.newImage("images/effet/blood-effect/blood-boom-2-G.png"),
-        love.graphics.newImage("images/effet/blood-effect/blood-boom-3-G.png"),
-        love.graphics.newImage("images/effet/blood-effect/blood-boom-4-G.png"),
-    },
-    D = {
-        love.graphics.newImage("images/effet/blood-effect/blood-boom-1-D.png"),
-        love.graphics.newImage("images/effet/blood-effect/blood-boom-2-D.png"),
-        love.graphics.newImage("images/effet/blood-effect/blood-boom-3-D.png"),
-        love.graphics.newImage("images/effet/blood-effect/blood-boom-4-D.png"),
-    }
-}
-
-local hitFramesfall = {
-    G = {
-        love.graphics.newImage("images/effet/blood-effect/blood-effect-4-G.png"),
-        love.graphics.newImage("images/effet/blood-effect/blood-effect-5-G.png"),
-        love.graphics.newImage("images/effet/blood-effect/blood-effect-6-G.png"),
-    },
-    D = {
-        love.graphics.newImage("images/effet/blood-effect/blood-effect-4-D.png"),
-        love.graphics.newImage("images/effet/blood-effect/blood-effect-5-D.png"),
-        love.graphics.newImage("images/effet/blood-effect/blood-effect-6-D.png"),
-    }
-}
-
-local sparkleFrames = {
-    G = {
-        love.graphics.newImage("images/effet/sparkle-effect/sparkle-1-G.png"),
-        love.graphics.newImage("images/effet/sparkle-effect/sparkle-2-G.png"),
-        love.graphics.newImage("images/effet/sparkle-effect/sparkle-3-G.png"),
-        love.graphics.newImage("images/effet/sparkle-effect/sparkle-4-G.png"),
-        love.graphics.newImage("images/effet/sparkle-effect/sparkle-5-G.png"),
-        love.graphics.newImage("images/effet/sparkle-effect/sparkle-6-G.png"),
-        love.graphics.newImage("images/effet/sparkle-effect/sparkle-7-G.png"),
-        love.graphics.newImage("images/effet/sparkle-effect/sparkle-8-G.png"),
-    },
-    D = {
-        love.graphics.newImage("images/effet/sparkle-effect/sparkle-1-D.png"),
-        love.graphics.newImage("images/effet/sparkle-effect/sparkle-2-D.png"),
-        love.graphics.newImage("images/effet/sparkle-effect/sparkle-3-D.png"),
-        love.graphics.newImage("images/effet/sparkle-effect/sparkle-4-D.png"),
-        love.graphics.newImage("images/effet/sparkle-effect/sparkle-5-D.png"),
-        love.graphics.newImage("images/effet/sparkle-effect/sparkle-6-D.png"),
-        love.graphics.newImage("images/effet/sparkle-effect/sparkle-7-D.png"),
-        love.graphics.newImage("images/effet/sparkle-effect/sparkle-8-D.png"),
-    }
-}
+local sandFrames = { G = {}, D = {} }
+local hitFrames = { G = {}, D = {} }
+local hitFramesfall = { G = {}, D = {} }
+local sparkleFrames = { G = {}, D = {} }
 
 function checkCollision(a, b)
     return a.x < b.x + b.width and
@@ -108,130 +67,322 @@ function addDebugLog(line)
     debugLog = table.concat(lines, "\n")
 end
 
-function love.load()
-    -- Charger background
-    background = love.graphics.newImage("images/background.png")
-    love.window.setMode(0, 0, {fullscreen = true})
-    screenWidth, screenHeight = love.graphics.getDimensions()
+function prepareLoading()
+    Assets.prepareLoading()
+    assetsToLoad = Assets.getAssetsToLoad()
+    assetsLoaded = 0
+    totalAssets = #assetsToLoad
+    loadingDone = false
+end
 
-    -- Créer le joueur
-    player = Player.new(200, screenHeight - 150)
+function loadNextAsset()
+    local asset = assetsToLoad[assetsLoaded + 1]
+    if not asset then
+        loadingDone = true
+        return
+    end
 
-    -- Créer l’ennemi (autre Player pour l’instant)
-    enemy = Enemy.new(screenWidth - 400, screenHeight - 150, player)
-    player.target = enemy
+    -- local key, path = asset[1], asset[2]
+    -- _G[key] = love.graphics.newImage(path)
+    local img = love.graphics.newImage(asset.path)
+    asset.assign(img)
 
-    enemy.fx.hitFrames = hitFrames
-    enemy.fx.hitFramesfall = hitFramesfall
-    enemy.fx.sparkleFrames = sparkleFrames
-    enemy.fx.HitFX = HitFX
-    player.fx.hitFrames = hitFrames
-    player.fx.hitFramesfall = hitFramesfall
-    player.fx.sparkleFrames = sparkleFrames
-    player.fx.HitFX = HitFX
+    assetsLoaded = assetsLoaded + 1
+end
 
-    player.fx.sandFrames = sandFrames
-    player.fx.SandFX = SandFX
-    enemy.fx.sandFrames = sandFrames
-    enemy.fx.SandFX = SandFX
-    
-    -- Chargement bar de vie
-    local barWidth = 300
+function drawLoadingScreen()
+    local progress = assetsLoaded / totalAssets
+    local barWidth = 400
     local barHeight = 20
-    local padding = 30
-    local y = screenHeight - 50
 
-    playerHealthBar = HealthBar:new(
-        screenWidth / 2 - barWidth - padding,
-        y,
-        barWidth,
-        barHeight,
-        player
+    love.graphics.printf(
+        "Chargement...",
+        0,
+        screenHeight / 2 - 60,
+        screenWidth,
+        "center"
     )
 
-    enemyHealthBar = HealthBar:new(
-        screenWidth / 2 + padding,
-        y,
+    love.graphics.rectangle(
+        "line",
+        screenWidth / 2 - barWidth / 2,
+        screenHeight / 2,
         barWidth,
-        barHeight,
-        enemy
+        barHeight
     )
 
-    camera = Camera:new()
+    love.graphics.rectangle(
+        "fill",
+        screenWidth / 2 - barWidth / 2,
+        screenHeight / 2,
+        barWidth * progress,
+        barHeight
+    )
+end
 
+function initGameStep()
+    if initStep == 1 then
+        screenWidth, screenHeight = love.graphics.getDimensions()
+
+    elseif initStep == 2 then
+        -- Créer le joueur
+        player = Player.new(200, screenHeight - 150)
+
+    elseif initStep == 3 then
+        -- Créer l’ennemi
+        enemy = Enemy.new(screenWidth - 400, screenHeight - 150, player)
+        player.target = enemy
+
+    elseif initStep == 4 then
+        -- FX sang / étincelles
+        enemy.fx.hitFrames = Assets.images.bloodBoom
+        enemy.fx.hitFramesfall = Assets.images.bloodEffect
+        enemy.fx.sparkleFrames = Assets.images.sparkle
+        enemy.fx.HitFX = HitFX
+
+        player.fx.hitFrames = Assets.images.bloodBoom
+        player.fx.hitFramesfall = Assets.images.bloodEffect
+        player.fx.sparkleFrames = Assets.images.sparkle
+        player.fx.HitFX = HitFX
+
+    elseif initStep == 5 then
+        -- FX sable
+        player.fx.sandFrames = Assets.images.sand
+        player.fx.SandFX = SandFX
+        enemy.fx.sandFrames = Assets.images.sand
+        enemy.fx.SandFX = SandFX
+
+    elseif initStep == 6 then
+        -- Barres de vie
+        local barWidth = 300
+        local barHeight = 20
+        local padding = 30
+        local y = screenHeight - 50
+
+        playerHealthBar = HealthBar:new(
+            screenWidth / 2 - barWidth - padding,
+            y,
+            barWidth,
+            barHeight,
+            player
+        )
+
+        enemyHealthBar = HealthBar:new(
+            screenWidth / 2 + padding,
+            y,
+            barWidth,
+            barHeight,
+            enemy
+        )
+
+    elseif initStep == 7 then
+        -- Caméra
+        camera = Camera:new()
+
+    elseif initStep == 8 then
+        -- FIN
+        initDone = true
+    end
+
+    initStep = initStep + 1
+end
+
+function love.load()
+    love.window.setMode(0, 0, { fullscreen = true })
+    screenWidth, screenHeight = love.graphics.getDimensions()
+    menuBackground = love.graphics.newImage("images/menu.png")
+    local buttonNames = {
+        "combats-legendaires",
+        "jouer-la-legende",
+        "mode-survie",
+        "options",
+        "quitter"
+    }
+    menuButtons = {}
+    for i, name in ipairs(buttonNames) do
+        local img = love.graphics.newImage("images/button/" .. name .. ".png")
+        table.insert(menuButtons, {name = name, img = img})
+    end
+    menuFont = love.graphics.newFont(48)
+    smallFont = love.graphics.newFont(20)
 end
 
 function love.update(dt)
-    -- Mise à jour du joueur et de l’ennemi
-    player:update(dt, enemy)
-    enemy:update(dt, player)
+    if gameState == "loading" then
+        -- charge 1 ou 2 images par frame
+        loadNextAsset()
+        if loadingDone then
+            initStep = 1
+            initDone = false
+            gameState = "postload"
+        end
+        return
+    end
 
-    -- Mise à jour de la camera
-    camera:update(dt)
+    if gameState == "postload" then
+        initGameStep()
+        if initDone then
+            readyTimer = 0
+            gameState = "ready"
+        end
+        return
+    end
 
-    -- Gestion orientation (tu peux l’intégrer dans update si tu veux)
-    player:updateOrientation(enemy)
-    enemy:updateOrientation(player)
-    
-    local atkennemy = enemy:getAttackHitbox()
-    local atk = player:getAttackHitbox()
-    if atkennemy and checkCollision(atkennemy, player) then
-        player.directionatk = atkennemy.type
-        player.state = atkennemy.strick 
-        player.hitType = atkennemy.hitType
-        player.hitTimer = 0
-        player.fall = atkennemy.fall
+    if gameState == "ready" then
+        goTimer = goTimer + dt
+        readyTimer = readyTimer + dt
+        if goTimer > GO_DURATION then
+            local t = goTimer - GO_DURATION
+            goAlpha = math.max(0, 1 - t / GO_FADE_DURATION) -- alpha décroît jusqu'à 0
+        end
+        if readyTimer >= READY_DURATION then
+            gameState = "game"
+        end
+        return
     end
-    if player.camShake then
-        camera:shake(0.25, 5)
-    end
-    if atk then
-        enemy.hitType = atk.hitType
-        enemy.directionatk = atk.type
-    end
-    if atk and checkCollision(atk, enemy) then
-        enemy.state = atk.strick 
-        enemy.hitTimer = 0
-        enemy.fall = atk.fall
-        enemy.hitJustReceived = true
-    end
-    if enemy.camShake then
-        camera:shake(0.25, 5)
+    if gameState == "game" then
+        -- Mise à jour du joueur et de l’ennemi
+        player:update(dt, enemy)
+        enemy:update(dt, player)
+
+        -- Mise à jour de la camera
+        camera:update(dt)
+
+        -- Gestion orientation (tu peux l’intégrer dans update si tu veux)
+        player:updateOrientation(enemy)
+        enemy:updateOrientation(player)
+        
+        local atkennemy = enemy:getAttackHitbox()
+        local atk = player:getAttackHitbox()
+        if atkennemy and checkCollision(atkennemy, player) then
+            player.directionatk = atkennemy.type
+            player.state = atkennemy.strick 
+            player.hitType = atkennemy.hitType
+            player.hitTimer = 0
+            player.fall = atkennemy.fall
+        end
+        if player.camShake then
+            camera:shake(0.25, 5)
+        end
+        if atk then
+            enemy.hitType = atk.hitType
+            enemy.directionatk = atk.type
+        end
+        if atk and checkCollision(atk, enemy) then
+            enemy.state = atk.strick 
+            enemy.hitTimer = 0
+            enemy.fall = atk.fall
+            enemy.hitJustReceived = true
+        end
+        if enemy.camShake then
+            camera:shake(0.25, 5)
+        end
     end
 end
 
 function love.draw()
+    if gameState == "menu" then
+        love.graphics.setFont(menuFont)
+        love.graphics.draw(
+            menuBackground,
+            0, 0, 0,
+            screenWidth / menuBackground:getWidth(),
+            screenHeight / menuBackground:getHeight()
+        )
 
-    camera:apply()
+        local totalHeight = (#menuButtons - 1) * buttonSpacing
+        local startY = (screenHeight - totalHeight) / 2
 
-    -- Dessiner le background redimensionné
-    love.graphics.draw(
-        background,
-        0, 0, 0,
-        screenWidth / background:getWidth(),
-        screenHeight / background:getHeight()
-    )
+        for i, btn in ipairs(menuButtons) do
+            local scaledWidth = btn.img:getWidth() * buttonScale
+            local scaledHeight = btn.img:getHeight() * buttonScale
+            local x = (screenWidth - scaledWidth) / 2
+            local y = startY + (i - 1) * buttonSpacing
 
-    -- Dessiner le joueur et l’ennemi
-    player:draw()
-    enemy:draw()
+            if i == selectedButton then
+                love.graphics.setColor(1,1,0,1) -- surbrillance jaune
+            else
+                love.graphics.setColor(1,1,1,1)
+            end
 
-    camera:clear()
+            love.graphics.draw(btn.img, x, y, 0, buttonScale, buttonScale)
+            love.graphics.setColor(1, 1, 1, 1)
+        end
+    elseif gameState == "loading" then
+        drawLoadingScreen()
+    elseif gameState == "ready" then
+        camera:apply()
+        local bg = Assets.images.background
+        love.graphics.draw(
+            bg,
+            0, 0, 0,
+            screenWidth / bg:getWidth(),
+            screenHeight / bg:getHeight()
+        )
+        player:draw()
+        enemy:draw()
+        camera:clear()
+        playerHealthBar:draw()
+        enemyHealthBar:draw()
 
-    -- HUD
-    playerHealthBar:draw()
-    enemyHealthBar:draw()
+        -- TEXTE CENTRAL
+        local go = Assets.images.go
+        local scale = 0.2
+        local x = (screenWidth - go:getWidth() * scale) / 2
+        local y = (screenHeight - go:getHeight() * scale) / 2
+        love.graphics.setColor(1, 1, 1, goAlpha) 
+        love.graphics.draw(go, x, y, 0, scale, scale)
+        love.graphics.setColor(1, 1, 1, 1)
+    elseif gameState == "game" then
+        camera:apply()
+        local bg = Assets.images.background
 
-    love.graphics.setColor(1,1,1,1)
-    love.graphics.print(debugLog, 10, 10)
+        -- Dessiner le background redimensionné
+        love.graphics.draw(
+            bg,
+            0, 0, 0,
+            screenWidth / bg:getWidth(),
+            screenHeight / bg:getHeight()
+        )
+
+        -- Dessiner le joueur et l’ennemi
+        player:draw()
+        enemy:draw()
+
+        camera:clear()
+
+        -- HUD
+        playerHealthBar:draw()
+        enemyHealthBar:draw()
+
+        love.graphics.setColor(1,1,1,1)
+        love.graphics.print(debugLog, 10, 10)
+    end
 end
 
 function love.keypressed(key)
-    if key == "q" then
-        love.event.quit()
-    end
+    if gameState == "menu" then
+         if key == "up" then
+            selectedButton = selectedButton - 1
+            if selectedButton < 1 then selectedButton = #menuButtons end
+        elseif key == "down" then
+            selectedButton = selectedButton + 1
+            if selectedButton > #menuButtons then selectedButton = 1 end
+        elseif key == "return" then
+            local sel = menuButtons[selectedButton].name
+            if sel == "quitter" then
+                love.event.quit()
+            elseif sel == "jouer-la-legende" then
+                prepareLoading()
+                gameState = "loading"
+            end
+        end
 
-    -- Passer l’événement au joueur
-    player:keypressed(key)
-    -- enemy:keypressed(key) -- si tu veux que l’ennemi réagisse aussi aux touches
+    elseif gameState == "game" then
+        if key == "q" then
+            love.event.quit()
+        end
+
+        player:keypressed(key)
+    end
 end
