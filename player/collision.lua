@@ -17,7 +17,7 @@ function Collision.checkCollision(a, b)
            a.y + a.height > b.y
 end
 
-function Collision:handle(other, dt)
+function Collision:handle(other, dt ,typeGame)
     local p = self.player
 
     if p.isInShopSequence or other.isInShopSequence then

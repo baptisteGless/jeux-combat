@@ -198,6 +198,11 @@ function Enemy.new(x, y, target)
     self.hp = self.maxHp
     self.isKO = false
     self.gameOver = false
+    self.koTimer = 0
+    self.koDuration = 1.2   -- temps d’affichage du KO
+    self.respawnTimer = 0
+    self.respawnDelay = 1.0
+    self.isRespawning = false
 
     self:loadWalkSprites()
     -- self:loadJumpSprites() 
@@ -500,11 +505,58 @@ function Enemy:isBusy()
            self.isBasSlashing or self.isShoping or self.state or self.isStunned
 end
 
-function Enemy:update(dt,other)
-    self.ai:update(dt)
+function Enemy:reset()
+    self.hp = self.maxHp
+    self.dead = false
+    self.gameOver = false
+    self.isRespawning = false
+    self.isKO = false
+
+    self.state = false
+    self.thrown = false
+    self.fall = false
+    self.isStunned = false
+
+    self.koTimer = 0
+    self.respawnTimer = 0
+
+    self.directionatk = "idle"
+    self.wantMove = 0
+    self.moveQueue = {}
+end
+
+function Enemy:startRespawn()
+    self.isRespawning = true
+    self.respawnTimer = 0
+
+    -- sortir hors écran
+    if math.random() < 0.5 then
+        self.x = -self.width - 100
+    else
+        self.x = screenWidth + 100
+    end
+
+    self.y = screenHeight - 150
+    self:reset()
+end
+
+function Enemy:updateKO(dt)
+    self.koTimer = self.koTimer + dt
+
+    if self.koTimer >= self.koDuration then
+        self:startRespawn()
+    end
+end
+
+function Enemy:update(dt,other,typeGame,enemies)
+    if self.gameOver and typeGame == "survive" then
+        self:updateKO(dt)
+        return
+    end
+    self.ai:update(dt,typeGame,enemies)
     self.movement:update(dt)
     self.animation:update(dt)
-    self.collision:handle(other, dt)
+    self.collision:handle(other, dt ,typeGame)
     for i = #self.fx.sandList, 1, -1 do
         local fx = self.fx.sandList[i]
         fx:update(dt)

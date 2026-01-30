@@ -248,7 +248,7 @@ function Movement:update(dt)
         return
     end
 
-    if enemy.thrown or enemy.isGettingUp then
+    if e.thrown or e.isGettingUp then
         return
     end
 

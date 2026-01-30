@@ -2,6 +2,9 @@
 local AI = {}
 AI.__index = AI
 
+local SEPARATION_DISTANCE = 60   -- distance minimum entre ennemis
+local SEPARATION_FORCE = 1      -- intensité du décalage
+
 function AI.new(enemy, target)
     local self = setmetatable({}, AI)
     self.enemy = enemy
@@ -74,6 +77,24 @@ function AI.new(enemy, target)
     return self
 end
 
+function AI:computeSeparation(e, enemies)
+    local force = 0
+
+    for _, other in ipairs(enemies) do
+        if other ~= e and not other.dead then
+            local dx = e.x - other.x
+            local dist = math.abs(dx)
+
+            if dist > 0 and dist < SEPARATION_DISTANCE then
+                -- plus ils sont proches, plus on pousse
+                force = force + (dx / dist) * (SEPARATION_DISTANCE - dist)
+            end
+        end
+    end
+
+    return force
+end
+
 function AI:canPause(dist)
     -- trop loin -> jamais pause
     if dist > 200 then return false end
@@ -118,13 +139,18 @@ function AI:chooseAttack(dist)
     return candidates[1].id
 end
 
-function AI:update(dt)
+function AI:update(dt,typeGame,enemies)
     local e = self.enemy
     local p = self.target
     
     -- local stopTest = true
 
     -- if stopTest then return end
+
+    if e.gameOver or e.isRespawning then
+        e.wantMove = 0
+        return
+    end
     
     if e.isGettingUp or e.thrown or e.isShopReactioning then
         return
@@ -184,7 +210,13 @@ function AI:update(dt)
     -- local dist = distance(e, p)
     -- local dirToPlayer = (p.x > e.x) and 1 or -1
     local proba = math.random()
-    if e.directionatk == "hitHaut" and dist < 110 and proba < 0.50 and not e.isStunned and not e.state then
+    local probaBlock
+    if typeGame == "history" then
+        probaBlock = 0.50
+    elseif typeGame == "survive" then
+        probaBlock = 0.20
+    end
+    if e.directionatk == "hitHaut" and dist < 110 and proba < probaBlock and not e.isStunned and not e.state then
         -- addDebugLog("BLOCK HAUT")
         e.isCrouching = false
         e.wantBlock = "haut"
@@ -212,9 +244,13 @@ function AI:update(dt)
         return
     end
 
-    -- si trop proche -> ROLL à 70% de chance 
-    if e.hitJustReceived and dist < 110 and proba < 0.40 and not e.isStunned and not e.state then
-        -- addDebugLog("e.directionatk =" .. tostring(e.directionatk ))
+    local probaRoll
+    if typeGame == "history" then
+        probaRoll = 0.40
+    elseif typeGame == "survive" then
+        probaRoll = 0.10
+    end
+    if e.hitJustReceived and dist < 110 and proba < probaRoll and not e.isStunned and not e.state then
         if proba < 0.20 then 
             -- direction naturelle = s'éloigner du joueur
             local rollDir = -dirToPlayer
@@ -291,7 +327,14 @@ function AI:update(dt)
     -- ATTAQUE SI À BONNE DISTANCE
     -- ===============================
     -- addDebugLog("self.attackCooldown=" .. tostring(self.attackCooldown))
-    if dist < 100 and not e:isBusy() and self.attackCooldown <= 0 then
+    proba = math.random()
+    local probaATK
+    if typeGame == "history" then
+        probaATK = 1
+    elseif typeGame == "survive" then
+        probaATK = 0.10
+    end
+    if dist < 100 and not e:isBusy() and self.attackCooldown <= 0 and proba < probaATK then
         e.isCrouching = false
         e.wantBlock = nil
         if e.isBlocking then
@@ -316,15 +359,33 @@ function AI:update(dt)
     -- ===============================
     -- SE RAPPROCHER
     -- ===============================
+
+    local separation = 0
+    if typeGame == "survive" and enemies then
+        separation = self:computeSeparation(e, enemies)
+    end
+
     if dist < 67 then
         e.wantMove = 0
         return
     end
 
     if dist >= 70 and not e:isBusy() then
-        e.wantMove = dirToPlayer
-        return
+        if typeGame == "survive" then
+            e.wantMove = dirToPlayer + separation * 0.02
+            return
+        elseif typeGame == "history" then
+            e.wantMove = dirToPlayer
+            return
+        end
     end
+
+    -- if typeGame == "survive" then
+    --     if not self:isClosestEnemy(e, player, enemies) then
+    --         e.wantMove = -dirToPlayer + separation * 0.05
+    --         return
+    --     end
+    -- end
 
     if dist < 70 and math.random() < 0.15 and not e:isBusy() then
         -- CHANCE DE PAUSE
@@ -338,7 +399,11 @@ function AI:update(dt)
                 e.isBlocking = false
                 e.wantBlock = nil
             end
-            e.wantMove = -dirToPlayer
+            if typeGame == "history" then
+                e.wantMove = -dirToPlayer
+            elseif typeGame == "survive" then
+                e.wantMove = -dirToPlayer + separation * 0.03
+            end
             return
         end
     end

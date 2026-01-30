@@ -5,6 +5,7 @@ local Camera = require("camera")  -- le systeme de camera shaking
 local Assets = require("assets")
 
 local gameState = "menu" -- "menu" | "game"
+local typeGame = "history"
 
 local initStep = 0
 local initDone = false
@@ -113,19 +114,57 @@ function initGameStep()
 
     elseif initStep == 2 then
         -- Créer le joueur
-        player = Player.new(200, screenHeight - 150)
+        if typeGame == "history" then
+            player = Player.new(200, screenHeight - 150)
+        elseif typeGame == "survive" then
+            player = Player.new(screenWidth/2, screenHeight - 150)
+        end
 
     elseif initStep == 3 then
         -- Créer l’ennemi
-        enemy = Enemy.new(screenWidth - 400, screenHeight - 150, player)
-        player.target = enemy
+        if typeGame == "history" then
+            enemy = Enemy.new(screenWidth - 400, screenHeight - 150, player)
+            player.target = enemy
+        elseif typeGame == "survive" then
+            enemies = {}
+            
+            local enemyCount = 3
+            local spacing = 180
+            local offscreenMargin = 200
+
+            for i = 1, enemyCount do
+                local y = screenHeight - 150
+                local x
+
+                if i % 2 == 0 then
+                    -- ennemi à droite
+                    x = screenWidth + offscreenMargin + (i * 40)
+                else
+                    -- ennemi à gauche
+                    x = -offscreenMargin - (i * 40)
+                end
+
+                local e = Enemy.new(x, y, player)
+                table.insert(enemies, e)
+            end
+            player.target = getClosestEnemy(player, enemies)
+        end
 
     elseif initStep == 4 then
         -- FX sang / étincelles
-        enemy.fx.hitFrames = Assets.images.bloodBoom
-        enemy.fx.hitFramesfall = Assets.images.bloodEffect
-        enemy.fx.sparkleFrames = Assets.images.sparkle
-        enemy.fx.HitFX = HitFX
+        if typeGame == "history" then
+            enemy.fx.hitFrames = Assets.images.bloodBoom
+            enemy.fx.hitFramesfall = Assets.images.bloodEffect
+            enemy.fx.sparkleFrames = Assets.images.sparkle
+            enemy.fx.HitFX = HitFX
+        elseif typeGame == "survive" then
+            for _, e in ipairs(enemies) do
+                e.fx.hitFrames = Assets.images.bloodBoom
+                e.fx.hitFramesfall = Assets.images.bloodEffect
+                e.fx.sparkleFrames = Assets.images.sparkle
+                e.fx.HitFX = HitFX
+            end
+        end
 
         player.fx.hitFrames = Assets.images.bloodBoom
         player.fx.hitFramesfall = Assets.images.bloodEffect
@@ -136,8 +175,15 @@ function initGameStep()
         -- FX sable
         player.fx.sandFrames = Assets.images.sand
         player.fx.SandFX = SandFX
-        enemy.fx.sandFrames = Assets.images.sand
-        enemy.fx.SandFX = SandFX
+        if typeGame == "history" then
+            enemy.fx.sandFrames = Assets.images.sand
+            enemy.fx.SandFX = SandFX
+        elseif typeGame == "survive" then
+            for _, e in ipairs(enemies) do
+                e.fx.sandFrames = Assets.images.sand
+                e.fx.SandFX = SandFX
+            end
+        end
 
     elseif initStep == 6 then
         -- Barres de vie
@@ -154,13 +200,24 @@ function initGameStep()
             player
         )
 
-        enemyHealthBar = HealthBar:new(
-            screenWidth / 2 + padding,
-            y,
-            barWidth,
-            barHeight,
-            enemy
-        )
+        if typeGame == "history" then
+            enemyHealthBar = HealthBar:new(
+                screenWidth / 2 + padding,
+                y,
+                barWidth,
+                barHeight,
+                enemy
+            )
+
+        elseif typeGame == "survive" then
+            enemyHealthBars = {}
+
+            for i, e in ipairs(enemies) do
+                local x = padding + (i - 1) * (barWidth / 2 + 10)
+                local bar = HealthBar:new(x, 20, barWidth / 2, barHeight, e)
+                table.insert(enemyHealthBars, bar)
+            end
+        end
 
     elseif initStep == 7 then
         -- Caméra
@@ -172,6 +229,26 @@ function initGameStep()
     end
 
     initStep = initStep + 1
+end
+
+function getClosestEnemy(player, enemies)
+    local closest = nil
+    local minDist = math.huge
+
+    for _, e in ipairs(enemies) do
+        if e.alive ~= false then
+            local dx = e.x - player.x
+            local dy = e.y - player.y
+            local dist = dx*dx + dy*dy
+
+            if dist < minDist then
+                minDist = dist
+                closest = e
+            end
+        end
+    end
+
+    return closest
 end
 
 function startTransition(direction)
@@ -259,16 +336,16 @@ function love.update(dt)
         end
         return
     end
-    if gameState == "game" then
+    if gameState == "game" and typeGame == "history" then
         -- Mise à jour du joueur et de l’ennemi
         player:update(dt, enemy)
-        enemy:update(dt, player)
+        enemy:update(dt, player, typeGame, nil)
 
         -- Mise à jour de la camera
         camera:update(dt)
 
         -- Gestion orientation (tu peux l’intégrer dans update si tu veux)
-        player:updateOrientation(enemy)
+        player:updateOrientation(enemy,dt,typeGame)
         enemy:updateOrientation(player)
         
         local atkennemy = enemy:getAttackHitbox()
@@ -295,6 +372,50 @@ function love.update(dt)
         end
         if enemy.camShake then
             camera:shake(0.25, 5)
+        end
+    end
+    if gameState == "game" and typeGame == "survive" then
+        local closestEnemy = getClosestEnemy(player, enemies)
+
+        if closestEnemy then
+            player:update(dt, closestEnemy)
+        else
+            player:update(dt, nil)
+        end
+        camera:update(dt)
+        player:updateOrientation(enemy,dt,typeGame)
+        for _, e in ipairs(enemies) do
+            e:update(dt, player, typeGame,enemies)
+            e:updateOrientation(player)
+        end
+
+        local atk = player:getAttackHitbox()
+        for _, e in ipairs(enemies) do
+            local atke = e:getAttackHitbox()
+
+            if atke and checkCollision(atke, player) then
+                player.directionatk = atke.type
+                player.state = atke.strick 
+                player.hitType = atke.hitType
+                player.hitTimer = 0
+                player.fall = atke.fall
+            end
+            if player.camShake then
+                camera:shake(0.25, 5)
+            end
+            if atk then
+                e.hitType = atk.hitType
+                e.directionatk = atk.type
+            end
+            if atk and checkCollision(atk, e) then
+                e.state = atk.strick
+                e.hitTimer = 0
+                e.fall = atk.fall
+                e.hitJustReceived = true
+            end
+            if e.camShake then
+                camera:shake(0.25, 5)
+            end
         end
     end
 end
@@ -329,7 +450,31 @@ function love.draw()
         end
     elseif gameState == "loading" then
         drawLoadingScreen()
-    elseif gameState == "ready" then
+    elseif gameState == "ready" and typeGame == "survive" then
+        camera:apply()
+        local bg = Assets.images.background
+        love.graphics.draw(
+            bg,
+            0, 0, 0,
+            screenWidth / bg:getWidth(),
+            screenHeight / bg:getHeight()
+        )
+        player:draw()
+        for _, e in ipairs(enemies) do
+            e:draw()
+        end
+        camera:clear()
+        playerHealthBar:draw()
+
+        -- TEXTE CENTRAL
+        local go = Assets.images.go
+        local scale = 0.2
+        local x = (screenWidth - go:getWidth() * scale) / 2
+        local y = (screenHeight - go:getHeight() * scale) / 2
+        love.graphics.setColor(1, 1, 1, goAlpha) 
+        love.graphics.draw(go, x, y, 0, scale, scale)
+        love.graphics.setColor(1, 1, 1, 1)
+    elseif gameState == "ready" and typeGame == "history" then
         camera:apply()
         local bg = Assets.images.background
         love.graphics.draw(
@@ -352,10 +497,9 @@ function love.draw()
         love.graphics.setColor(1, 1, 1, goAlpha) 
         love.graphics.draw(go, x, y, 0, scale, scale)
         love.graphics.setColor(1, 1, 1, 1)
-    elseif gameState == "game" then
+    elseif gameState == "game" and typeGame == "history" then
         camera:apply()
         local bg = Assets.images.background
-
         -- Dessiner le background redimensionné
         love.graphics.draw(
             bg,
@@ -363,17 +507,36 @@ function love.draw()
             screenWidth / bg:getWidth(),
             screenHeight / bg:getHeight()
         )
-
         -- Dessiner le joueur et l’ennemi
         player:draw()
         enemy:draw()
-
         camera:clear()
-
         -- HUD
         playerHealthBar:draw()
         enemyHealthBar:draw()
-
+        love.graphics.setColor(1,1,1,1)
+        love.graphics.print(debugLog, 10, 10)
+    elseif gameState == "game" and typeGame == "survive" then
+        camera:apply()
+        local bg = Assets.images.background
+        -- Dessiner le background redimensionné
+        love.graphics.draw(
+            bg,
+            0, 0, 0,
+            screenWidth / bg:getWidth(),
+            screenHeight / bg:getHeight()
+        )
+        -- Dessiner le joueur et l’ennemi
+        player:draw()
+        for _, e in ipairs(enemies) do
+            e:draw()
+        end
+        camera:clear()
+        -- HUD
+        playerHealthBar:draw()
+        -- for _, bar in ipairs(enemyHealthBars) do
+        --     bar:draw()
+        -- end
         love.graphics.setColor(1,1,1,1)
         love.graphics.print(debugLog, 10, 10)
     end
@@ -401,9 +564,14 @@ function love.keypressed(key)
             local sel = menuButtons[selectedButton].name
             if sel == "quitter" then
                 love.event.quit()
+            elseif sel == "mode-survie" then
+                prepareLoading()
+                gameState = "loading"
+                typeGame = "survive"
             elseif sel == "jouer-la-legende" then
                 prepareLoading()
                 gameState = "loading"
+                typeGame = "history"
             end
         end
 

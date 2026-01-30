@@ -587,11 +587,20 @@ function Player:draw()
     end
 end
 
-function Player:updateOrientation(other)
-    if other.x < self.x then
-        self.side = "G"
-    else
-        self.side = "D"
+function Player:updateOrientation(other, dt, mode)
+    local aimX
+    if mode == "survive" then
+        if love.keyboard.isDown("left") then
+            self.side = "G"
+        elseif love.keyboard.isDown("right") then 
+            self.side = "D"
+        end
+    elseif mode == "history" then
+        if other.x < self.x then
+            self.side = "G"
+        else
+            self.side = "D"
+        end
     end
 end
 
