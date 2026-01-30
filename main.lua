@@ -18,6 +18,9 @@ local buttonSpacing = 80 -- espace vertical entre les boutons
 screenWidth, screenHeight = love.graphics.getDimensions()
 local menuStartY = (screenHeight - (#menuButtons * buttonSpacing)) / 2
 
+local loadingAngle = 0
+local LOADING_ROTATION_SPEED = math.pi
+
 local readyTimer = 0
 local READY_DURATION = 2.5 -- secondes
 local assetsToLoad = {}
@@ -91,33 +94,17 @@ function loadNextAsset()
 end
 
 function drawLoadingScreen()
-    local progress = assetsLoaded / totalAssets
-    local barWidth = 400
-    local barHeight = 20
-
-    love.graphics.printf(
-        "Chargement...",
-        0,
-        screenHeight / 2 - 60,
-        screenWidth,
-        "center"
+    love.graphics.draw(
+        loadingBackground,
+        0, 0, 0,
+        screenWidth / loadingBackground:getWidth(),
+        screenHeight / loadingBackground:getHeight()
     )
-
-    love.graphics.rectangle(
-        "line",
-        screenWidth / 2 - barWidth / 2,
-        screenHeight / 2,
-        barWidth,
-        barHeight
-    )
-
-    love.graphics.rectangle(
-        "fill",
-        screenWidth / 2 - barWidth / 2,
-        screenHeight / 2,
-        barWidth * progress,
-        barHeight
-    )
+    local scale = 0.1 -- ajuste la taille
+    local w, h = logoloading:getWidth(), logoloading:getHeight()
+    local x = screenWidth - (w * scale) - 20 -- 20 pixels du bord droit
+    local y = screenHeight - (h * scale) - 20 -- 20 pixels du bas
+    love.graphics.draw(logoloading, x + (w*scale)/2, y + (h*scale)/2, loadingAngle, scale, scale, w/2, h/2)
 end
 
 function initGameStep()
@@ -187,10 +174,27 @@ function initGameStep()
     initStep = initStep + 1
 end
 
+function startTransition(direction)
+    if direction == "down" then
+        transitionState = "down"    -- descend pour cacher
+    elseif direction == "up" then
+        transitionState = "up"      -- remonte pour montrer
+    elseif direction == "stay" then
+        transitionState = "stay"
+    end
+end
+
+
 function love.load()
     love.window.setMode(0, 0, { fullscreen = true })
     screenWidth, screenHeight = love.graphics.getDimensions()
     menuBackground = love.graphics.newImage("images/menu.png")
+    loadingBackground = love.graphics.newImage("images/load-fon.png")
+    logoloading = love.graphics.newImage("images/loading.png")
+    transition = love.graphics.newImage("images/porte-2.png")
+    transitionY = -screenHeight  -- commence au dessus de l'écran
+    transitionSpeed = 1000        -- pixels par seconde
+    transitionState = "hidden"   -- "hidden" | "down" | "up" | "stay"
     local buttonNames = {
         "combats-legendaires",
         "jouer-la-legende",
@@ -204,24 +208,39 @@ function love.load()
         table.insert(menuButtons, {name = name, img = img})
     end
     menuFont = love.graphics.newFont(48)
+    loadingFont = love.graphics.newFont(48)
     smallFont = love.graphics.newFont(20)
 end
 
 function love.update(dt)
+    if transitionState == "down" then
+        transitionY = math.min(0, transitionY + transitionSpeed * dt)
+    elseif transitionState == "up" then
+        transitionY = math.max(-screenHeight, transitionY - transitionSpeed * dt)
+    elseif transitionState == "stay" then
+        transitionY = 0
+    end
     if gameState == "loading" then
         -- charge 1 ou 2 images par frame
         loadNextAsset()
+        local progress = assetsLoaded / totalAssets
+        -- déclencher la herse quand on atteint 70%
+        if progress >= 0.7 and transitionState ~= "down" then
+            startTransition("down")  -- herse commence à descendre
+        end
         if loadingDone then
             initStep = 1
             initDone = false
             gameState = "postload"
         end
+        loadingAngle = loadingAngle + LOADING_ROTATION_SPEED * dt
         return
     end
 
     if gameState == "postload" then
         initGameStep()
         if initDone then
+            startTransition("up")
             readyTimer = 0
             gameState = "ready"
         end
@@ -357,6 +376,16 @@ function love.draw()
 
         love.graphics.setColor(1,1,1,1)
         love.graphics.print(debugLog, 10, 10)
+    end
+    if transitionY > -screenHeight then
+        love.graphics.draw(
+            transition,
+            0,
+            transitionY,
+            0,
+            screenWidth / transition:getWidth(),
+            screenHeight / transition:getHeight()
+        )
     end
 end
 
