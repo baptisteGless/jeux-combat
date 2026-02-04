@@ -1,0 +1,3 @@
+Ce projet necessite LUA et LOVE.2D 
+Pour activer le projet faite dans le terminal de VScode:
+& "C:\baptiste\programation\love2d\LOVE\love.exe" "C:\baptiste\programation\combat_ia"
