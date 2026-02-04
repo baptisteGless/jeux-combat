@@ -28,6 +28,9 @@ local assetsToLoad = {}
 local assetsLoaded = 0
 local totalAssets = 0
 local loadingDone = false
+local transitionMode = nil
+local transitionPauseTimer = 0
+local TRANSITION_PAUSE_DURATION = 1
 
 local goAlpha = 1         -- alpha actuel (1 = opaque, 0 = invisible)
 local goTimer = 0         -- timer pour l'affichage
@@ -115,15 +118,15 @@ function initGameStep()
     elseif initStep == 2 then
         -- Créer le joueur
         if typeGame == "history" then
-            player = Player.new(200, screenHeight - 150)
+            player = Player.new(200, screenHeight - 150,"history")
         elseif typeGame == "survive" then
-            player = Player.new(screenWidth/2, screenHeight - 150)
+            player = Player.new(screenWidth/2, screenHeight - 150,"survive")
         end
 
     elseif initStep == 3 then
         -- Créer l’ennemi
         if typeGame == "history" then
-            enemy = Enemy.new(screenWidth - 400, screenHeight - 150, player)
+            enemy = Enemy.new(screenWidth - 400, screenHeight - 150, player,"history")
             player.target = enemy
         elseif typeGame == "survive" then
             enemies = {}
@@ -144,7 +147,7 @@ function initGameStep()
                     x = -offscreenMargin - (i * 40)
                 end
 
-                local e = Enemy.new(x, y, player)
+                local e = Enemy.new(x, y, player,"survive")
                 table.insert(enemies, e)
             end
             player.target = getClosestEnemy(player, enemies)
@@ -261,7 +264,6 @@ function startTransition(direction)
     end
 end
 
-
 function love.load()
     love.window.setMode(0, 0, { fullscreen = true })
     screenWidth, screenHeight = love.graphics.getDimensions()
@@ -320,6 +322,8 @@ function love.update(dt)
             startTransition("up")
             readyTimer = 0
             gameState = "ready"
+            goAlpha = 1
+            goTimer = 0
         end
         return
     end
@@ -373,6 +377,10 @@ function love.update(dt)
         if enemy.camShake then
             camera:shake(0.25, 5)
         end
+        if player.gameOver and not transitionMode then
+            transitionMode = "closing"
+            startTransition("down")
+        end
     end
     if gameState == "game" and typeGame == "survive" then
         local closestEnemy = getClosestEnemy(player, enemies)
@@ -417,6 +425,38 @@ function love.update(dt)
                 camera:shake(0.25, 5)
             end
         end
+        if player.gameOver and not transitionMode then
+            transitionMode = "closing"
+            startTransition("down")
+        end
+    end
+    if transitionMode == "closing" then
+        -- la grille descend
+        if transitionY >= 0 then
+            transitionMode = "pause"
+            transitionPauseTimer = 0
+        end
+        return
+    end
+
+    if transitionMode == "pause" then
+        transitionPauseTimer = transitionPauseTimer + dt
+
+        if transitionPauseTimer >= TRANSITION_PAUSE_DURATION then
+            gameState = "menu"
+            transitionMode = "opening"
+            startTransition("up")
+        end
+        return
+    end
+
+    if transitionMode == "opening" then
+        -- la grille remonte
+        if transitionY <= -screenHeight then
+            transitionMode = nil
+            transitionState = "hidden"
+        end
+        return
     end
 end
 

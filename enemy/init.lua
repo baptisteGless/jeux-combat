@@ -7,7 +7,7 @@ local AI = require("enemy.ai")
 local Enemy = {}
 Enemy.__index = Enemy
 
-function Enemy.new(x, y, target)
+function Enemy.new(x, y, target,typeGame)
     local self = setmetatable({}, Enemy)
 
      -- Récupérer dimensions actuelles de l’écran
@@ -195,6 +195,11 @@ function Enemy.new(x, y, target)
 
     -- healthbar
     self.maxHp = 100
+    if typeGame == "history" then
+        self.maxHp = 100
+    elseif typeGame == "survive" then
+        self.maxHp = 50
+    end
     self.hp = self.maxHp
     self.isKO = false
     self.gameOver = false

@@ -7,7 +7,7 @@ local Collision = require("player.collision")
 local Player = {}
 Player.__index = Player
 
-function Player.new(x, y, target)
+function Player.new(x, y,typeGame)
     local self = setmetatable({}, Player)
 
     -- Récupérer dimensions actuelles de l’écran
@@ -200,8 +200,6 @@ function Player.new(x, y, target)
     self.throwVelocity = 0
     self.throwDirection = 0
 
-    self.target = target 
-
     -- état de get-up-v
     self.isGettingUp = false
     self.guvTimer = 0
@@ -229,7 +227,13 @@ function Player.new(x, y, target)
     self.camShake = false
 
     -- healthbar
+    -- addDebugLog("typeGame=" .. tostring(typeGame))
     self.maxHp = 100
+    if typeGame == "history" then
+        self.maxHp = 100
+    elseif typeGame == "survive" then
+        self.maxHp = 150
+    end
     self.hp = self.maxHp
     self.isKO = false
     self.gameOver = false
